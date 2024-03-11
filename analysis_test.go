@@ -35,3 +35,9 @@ func TestSimilarity(t *testing.T) {
 	t.Log(Similarity(seq1, seq2))
 	t.Log(Similarity(seq2, seq1))
 }
+
+func TestMeltingTemperature(t *testing.T) {
+	str1 := "CCTATCTCCTCATCCTCTAC"
+	seq1, _ := ToSeq(str1)
+	t.Log(MeltingTemperature(seq1))
+}

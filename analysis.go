@@ -1,6 +1,7 @@
 package GoDNA
 
 import (
+	"github.com/mimikwang/gomelt"
 	"math"
 	"slices"
 )
@@ -221,4 +222,22 @@ func Similarity(lSeq, rSeq Seq) int {
 		}
 	}
 	return SM
+}
+
+// 与matlab计算出的结果虽然不太一样但是可以接近
+// 我觉得问题在于是此包使用的是
+// Correction for deltaS: 0.368 x (N-1) x ln[Na+]
+// (SantaLucia (1998), Proc Natl Acad Sci USA 95: 1460-1465)
+// 问题不大，可以用，如果需要准确数值就再去matlab跑一下就好了
+func MeltingTemperature(seq Seq) float64 {
+	parameters := gomelt.Params{
+		Monovalent: 1000, //50.0,
+		Divalent:   0,    //1.5,
+		Dntp:       0,    //0.2,
+		Dna:        10,   //200.0,
+		T:          37.0,
+	}
+	DNACode, _ := seq.ToStr()
+	result, _ := gomelt.MeltingTemp(DNACode, parameters)
+	return result.Tm
 }
