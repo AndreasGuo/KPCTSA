@@ -1,4 +1,4 @@
-package GoDNA
+package DNAAnalysis
 
 // author: Andreas Guo
 // This file applied Repair function

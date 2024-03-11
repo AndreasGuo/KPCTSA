@@ -1,4 +1,4 @@
-package GoDNA
+package DNAAnalysis
 
 import (
 	"github.com/mimikwang/gomelt"
