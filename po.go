@@ -23,6 +23,17 @@ type population struct {
 	lb, ub       float64
 }
 
+func createIndividual(dim uint, lb, ub float64) individual {
+	variance := make([]float64, dim)
+	seq := make(DNAAnalysis.Seq, dim)
+	for i := range variance {
+		variance[i] = rand.Float64()*float64((lb-ub)) + float64(ub)
+	}
+	inv := individual{variance: variance, seq: seq}
+	inv.repair()
+	return inv
+}
+
 func CreatePopulation(dim, size uint, maxIteration uint, lb, ub float64) *population {
 	pop := new(population)
 	pop.dim = dim
@@ -31,17 +42,33 @@ func CreatePopulation(dim, size uint, maxIteration uint, lb, ub float64) *popula
 	pop.maxIteration = maxIteration
 
 	pop.individuals = make([]individual, size)
+	for i := range pop.individuals {
+		pop.individuals[i] = createIndividual(dim, lb, ub)
+	}
 
 	return pop
 }
 
-func levy[T int | float64](lh T) float64 {
-	w := 1 + (float64(lh)-1)/4
-	l := math.Pow(math.Sin(math.Pi*w), 2)
-	// A step is ignored here which PO only use 1 dimension version of levy
-	l += math.Pow(float64(lh-1), 2) * (1 + math.Pow(math.Sin(2*math.Pi*float64(lh)), 2))
+//%%  Levy search strategy
+//function o = Levy(d)
+//beta = 1.5;
+//sigma = (gamma(1 + beta) *sin(pi * beta / 2) / (gamma((1 + beta) / 2) * beta * 2^((beta - 1) / 2)))^(1 / beta);
+//u = randn(1, d) * sigma;
+//v = randn(1, d);
+//step = u ./ abs(v).^(1 / beta);
+//o = step;
+//end
 
-	return l
+func levy(lh int) []float64 {
+	beta := 1.5
+	sigma := math.Gamma(1+beta) * math.Sin(math.Pi*beta/2)
+	sigma /= math.Gamma(1+beta/2) * beta * math.Pow(1, (beta-1)/2)
+	sigma = math.Pow(sigma, 1/beta)
+	u := make([]float64, lh)
+	for i := range u {
+		u[i] = rand.NormFloat64() / math.Pow(math.Abs(rand.NormFloat64()), 1/beta)
+	}
+	return u
 }
 
 func (pop *population) Fitness(fitnessFunc func([]float64) float64) int {
@@ -64,21 +91,21 @@ func mean[T int | float64](x []T) float64 {
 }
 
 func st0(x, gbest []float64, dim, it, maxIt int) {
-	ldim := levy(dim)
+	levyDim := levy(dim)
 	meanx := mean(x)
 	r := rand.Float64()
 	for i := 0; i < dim; i++ {
 		// X_new(j, :) = #inmatlab //(X(j, :) - GBestX) .* Levy(dim) + rand(1) * mean(X(j, :)) * (1 - i / Max_iter) ^ (2 * i / Max_iter);
-		x[i] = (x[i]-gbest[i])*ldim + r*meanx*math.Pow(1-float64(it)/float64(maxIt), 2*float64(it)/float64(maxIt))
+		x[i] = (x[i]-gbest[i])*levyDim[i] + r*meanx*math.Pow(1-float64(it)/float64(maxIt), 2*float64(it)/float64(maxIt))
 	}
 }
 
 func st1(x, gbest []float64, dim, it, maxIt int) {
 	// X_new(j, :) = X(j, :) + GBestX .* Levy(dim) + randn() * (1 - i / Max_iter) * ones(1, dim);
 	r := rand.NormFloat64()
-	ldim := levy(dim)
+	levyDim := levy(dim)
 	for i := 0; i < dim; i++ {
-		x[i] = x[i] + gbest[i]*ldim + r*(1-float64(it)/float64(maxIt))
+		x[i] = x[i] + gbest[i]*levyDim[i] + r*(1-float64(it)/float64(maxIt))
 	}
 }
 
@@ -112,7 +139,7 @@ func st3(x, gbest []float64, dim, it, maxIt int, sita float64) {
 	}
 }
 
-func repair(inv individual) {
+func (inv *individual) repair() {
 	// First control GC at 50%
 	// and generate DNA seq.
 	GCPosition := make([]int, len(inv.variance))
@@ -201,7 +228,7 @@ func (pop *population) UpdatePopulation(fitnessFunc func([]float64) float64) ind
 				pop.individuals[i].variance[j] = max(pop.individuals[i].variance[j], pop.lb)
 				pop.individuals[i].variance[j] = min(pop.individuals[i].variance[j], pop.ub)
 			}
-			repair(pop.individuals[i])
+			pop.individuals[i].repair()
 		}
 		bestIndex = pop.Fitness(fitnessFunc)
 	}
