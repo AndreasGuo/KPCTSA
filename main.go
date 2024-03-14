@@ -22,7 +22,9 @@ func main() {
 			pop := CreatePopulation(DIM, POPSIZE, MAXIT, LB, UB)
 			fitFunc := FitnessCall(dnaSet, index, fitChan)
 			inv := pop.UpdatePopulation(fitFunc)
-			dnaSet[index] = inv
+			if it == 0 || inv.fitness > dnaSet[index].fitness {
+				dnaSet[index] = inv
+			}
 		}
 		fmt.Println("Done")
 		for _, inv := range dnaSet {
@@ -38,5 +40,6 @@ func main() {
 
 func RandomDNASet(dim, size uint) []individual {
 	pop := CreatePopulation(dim, size, 0, 0, 3)
+	//pop.Fitness(fitFunc)
 	return pop.individuals
 }
