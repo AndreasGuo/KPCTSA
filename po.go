@@ -2,6 +2,7 @@ package main
 
 import (
 	"GoDNA/DNAAnalysis"
+	"fmt"
 	"math"
 	"math/rand"
 	"time"
@@ -15,6 +16,8 @@ type individual struct {
 	fitness  float64
 }
 
+type DNASet []individual
+
 type population struct {
 	individuals  []individual
 	dim          uint
@@ -27,7 +30,7 @@ func createIndividual(dim uint, lb, ub float64) individual {
 	variance := make([]float64, dim)
 	seq := make(DNAAnalysis.Seq, dim)
 	for i := range variance {
-		variance[i] = rand.Float64()*float64((lb-ub)) + float64(ub)
+		variance[i] = math.Round(rand.Float64()*float64((lb-ub)) + float64(ub))
 	}
 	inv := individual{variance: variance, seq: seq}
 	inv.repair()
@@ -71,15 +74,11 @@ func levy(lh int) []float64 {
 	return u
 }
 
-func (pop *population) Fitness(fitnessFunc func([]float64) float64) int {
-	bestIndex := -1
-	for ind, inv := range pop.individuals {
-		inv.fitness = fitnessFunc(inv.variance)
-		if bestIndex == -1 || inv.fitness < pop.individuals[bestIndex].fitness {
-			bestIndex = ind
-		}
-	}
-	return bestIndex
+// 考虑到：
+// 虽然现在是每次会生成一个新种群
+// 但保不齐日后可能会在已有种群中继续迭代
+func (pop *population) Fitness(fitnessFunc func([]individual) int) int {
+	return fitnessFunc(pop.individuals)
 }
 
 func mean[T int | float64](x []T) float64 {
@@ -142,8 +141,8 @@ func st3(x, gbest []float64, dim, it, maxIt int, sita float64) {
 func (inv *individual) repair() {
 	// First control GC at 50%
 	// and generate DNA seq.
-	GCPosition := make([]int, len(inv.variance))
-	ATPosition := make([]int, len(inv.variance))
+	GCPosition := []int{} //make([]int, len(inv.variance))
+	ATPosition := []int{} //make([]int, len(inv.variance))
 	for i, value := range inv.variance {
 		if value == DNAAnalysis.C || value == DNAAnalysis.G {
 			GCPosition = append(GCPosition, i)
@@ -178,7 +177,7 @@ func (inv *individual) repair() {
 	}
 
 	for i, value := range inv.variance {
-		switch value {
+		switch int(value) {
 		case 0:
 			inv.seq[i] = DNAAnalysis.C
 		case 1:
@@ -188,7 +187,7 @@ func (inv *individual) repair() {
 		case 3:
 			inv.seq[i] = DNAAnalysis.G
 		default:
-			panic("error while repair DNA seq, value do not defined!")
+			panic(fmt.Sprintf("error while repair DNA seq, value %f do not defined!", value))
 		}
 	}
 }
@@ -203,7 +202,7 @@ func shuffle(slice []int) {
 	}
 }
 
-func (pop *population) UpdatePopulation(fitnessFunc func([]float64) float64) individual {
+func (pop *population) UpdatePopulation(fitnessFunc func([]individual) int) individual {
 	bestIndex := pop.Fitness(fitnessFunc)
 	gbest := pop.individuals[bestIndex].variance
 	alpha := rand.Float64() / 5

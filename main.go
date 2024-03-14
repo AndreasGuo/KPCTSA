@@ -1,43 +1,42 @@
 package main
 
-import (
-	"GoDNA/DNAAnalysis"
-	"fmt"
-)
+import "fmt"
+
+const DIM = 20
+const DNASIZE = 7
+const POPSIZE = 50
+const MAXIT = 50
+const LB = 0
+const UB = 3
+const DNASETITERATION = 50
 
 func main() {
-	str1 := "GATCTATGTAAGGCCGGTTG"
-	str2 := "GTTCTATGTCCCACAGATCC"
-	seq1, _ := DNAAnalysis.ToSeq(str1)
-	seq2, _ := DNAAnalysis.ToSeq(str2)
+	fitChan := CreateWorker(100, 100, 10)
+	defer fitChan.Close()
 
-	continuityChan, continuityResult, hairpinChan, hairpinResult, hmChan, hmResult, smChan, smResult, mtChan, mtResult := CreateWorker(100, 100, 10)
-	defer close(continuityChan)
-	defer close(continuityResult)
-	defer close(hairpinChan)
-	defer close(hairpinResult)
-	defer close(hmChan)
-	defer close(hmResult)
-	defer close(smChan)
-	defer close(smResult)
-	defer close(mtChan)
-	defer close(mtResult)
+	var dnaSet = RandomDNASet(DIM, DNASIZE)
 
-	var in1 = seqMapSingle{0, seq1}
-	var in2 = seqMapSingle{1, seq2}
-	hairpinChan <- in1
-	fmt.Println(<-hairpinResult)
-	hairpinChan <- in2
-	fmt.Println(<-hairpinResult)
+	for it := 0; it < DNASETITERATION; it++ {
+		fmt.Print("DNASet iteration ", it+1, " ...")
+		for index := range dnaSet {
+			pop := CreatePopulation(DIM, POPSIZE, MAXIT, LB, UB)
+			fitFunc := FitnessCall(dnaSet, index, fitChan)
+			inv := pop.UpdatePopulation(fitFunc)
+			dnaSet[index] = inv
+		}
+		fmt.Println("Done")
+		for _, inv := range dnaSet {
+			DNAString, err := inv.seq.ToStr()
+			if err != nil {
+				panic("error while decoding")
+			}
+			fmt.Println(DNAString)
+		}
+	}
 
-	var pair = seqMapPair{0, 1, seq1, seq2}
-	hmChan <- pair
-	fmt.Println(<-hmResult)
-	smChan <- pair
-	fmt.Println(<-smResult)
+}
 
-	mtChan <- in1
-	fmt.Println(<-mtResult)
-	mtChan <- in2
-	fmt.Println(<-mtResult)
+func RandomDNASet(dim, size uint) []individual {
+	pop := CreatePopulation(dim, size, 0, 0, 3)
+	return pop.individuals
 }

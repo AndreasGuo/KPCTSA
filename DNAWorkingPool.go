@@ -54,16 +54,33 @@ func meltingTemperatureWorker(in <-chan seqMapSingle, out chan<- resultMapSingle
 	}
 }
 
-func CreateWorker(numOfSingle, numOfPair int, bufferSize int) (chan seqMapSingle,
-	chan resultMapSingle,
-	chan seqMapSingle,
-	chan resultMapSingle,
-	chan seqMapPair,
-	chan resultMapPair,
-	chan seqMapPair,
-	chan resultMapPair,
-	chan seqMapSingle,
-	chan resultMapSingle) {
+type FitChan struct {
+	ctIn chan seqMapSingle
+	ctRe chan resultMapSingle
+	hpIn chan seqMapSingle
+	hpRe chan resultMapSingle
+	hmIn chan seqMapPair
+	hmRe chan resultMapPair
+	smIn chan seqMapPair
+	smRe chan resultMapPair
+	mtIn chan seqMapSingle
+	mtRe chan resultMapSingle
+}
+
+func (fitChan *FitChan) Close() {
+	close(fitChan.ctIn)
+	close(fitChan.ctRe)
+	close(fitChan.hpIn)
+	close(fitChan.hpRe)
+	close(fitChan.hmIn)
+	close(fitChan.hmRe)
+	close(fitChan.smIn)
+	close(fitChan.smRe)
+	close(fitChan.mtIn)
+	close(fitChan.mtRe)
+}
+
+func CreateWorker(numOfSingle, numOfPair int, bufferSize int) *FitChan {
 	continuityChan := make(chan seqMapSingle, bufferSize)
 	continuityResult := make(chan resultMapSingle, bufferSize)
 	hairpinChan := make(chan seqMapSingle, bufferSize)
@@ -83,7 +100,7 @@ func CreateWorker(numOfSingle, numOfPair int, bufferSize int) (chan seqMapSingle
 		go hmeasureWorker(hmChan, hmResult)
 		go similarityWorker(smChan, smResult)
 	}
-	return continuityChan,
+	return &FitChan{continuityChan,
 		continuityResult,
 		hairpinChan,
 		hairpinResult,
@@ -92,5 +109,5 @@ func CreateWorker(numOfSingle, numOfPair int, bufferSize int) (chan seqMapSingle
 		smChan,
 		smResult,
 		mtChan,
-		mtResult
+		mtResult}
 }
