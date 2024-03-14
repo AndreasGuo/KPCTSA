@@ -5,10 +5,10 @@ import "fmt"
 const DIM = 20
 const DNASIZE = 7
 const POPSIZE = 50
-const MAXIT = 50
+const MAXIT = 100
 const LB = 0
 const UB = 3
-const DNASETITERATION = 50
+const DNASETITERATION = 500
 
 func main() {
 	fitChan := CreateWorker(100, 100, 10)
@@ -22,7 +22,7 @@ func main() {
 			pop := CreatePopulation(DIM, POPSIZE, MAXIT, LB, UB)
 			fitFunc := FitnessCall(dnaSet, index, fitChan)
 			inv := pop.UpdatePopulation(fitFunc)
-			if it == 0 || inv.fitness > dnaSet[index].fitness {
+			if it == 0 || inv.fitness < dnaSet[index].fitness {
 				dnaSet[index] = inv
 			}
 		}
