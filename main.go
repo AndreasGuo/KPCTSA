@@ -4,11 +4,11 @@ import "fmt"
 
 const DIM = 20
 const DNASIZE = 7
-const POPSIZE = 50
+const POPSIZE = 20
 const MAXIT = 100
 const LB = 0
 const UB = 3
-const DNASETITERATION = 500
+const DNASETITERATION = 1000
 
 func main() {
 	fitChan := CreateWorker(100, 100, 10)

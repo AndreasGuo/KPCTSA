@@ -122,8 +122,8 @@ func FitnessCall(dnaSet DNASet, index int, fitChan *FitChan) func(individuals []
 		}()
 		group.Wait()
 
-		hmList := avgTableRow(hmTable)
-		smList := avgTableRow(smTable)
+		hmList := sumTableRow(hmTable)
+		smList := sumTableRow(smTable)
 		// 连续与发卡使用实际值即可
 		// 但是对于H-测度与相似性，一条DNA链的改变会影响其他链的值
 		// 考虑使用
@@ -177,8 +177,21 @@ func mtDiviant(values, compared []float64) {
 			div += math.Pow((c-avg)/(maxVal-minVal), 2)
 		}
 		div += math.Pow((value-avg)/(maxVal-minVal), 2)
+		div /= DNASIZE
 		values[i] = max(div, 1e-6)
 	}
+}
+
+func sumTableRow[T int | float64](table [][]T) []float64 {
+	sumList := make([]float64, len(table))
+	for i, row := range table {
+		var sum T = 0
+		for _, element := range row {
+			sum += element
+		}
+		sumList[i] = float64(sum)
+	}
+	return sumList
 }
 
 func avgTableRow[T int | float64](table [][]T) []float64 {
@@ -196,6 +209,6 @@ func avgTableRow[T int | float64](table [][]T) []float64 {
 func norm(values []float64, minVal, maxVal float64) {
 	for i, _ := range values {
 		values[i] = (values[i] - minVal) / (maxVal - minVal)
-		values[i] = max(values[i], 1e-6)
+		values[i] = max(values[i], 2e-2)
 	}
 }
