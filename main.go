@@ -9,6 +9,7 @@ const MAXIT = 500
 const LB = 0
 const UB = 3
 const DNASETITERATION = 200
+const MINVALUE = 2e-2
 
 func main() {
 	fitChan := CreateWorker(100, 100, 10)
@@ -19,12 +20,11 @@ func main() {
 	for it := 0; it < DNASETITERATION; it++ {
 		fmt.Print("DNASet iteration ", it+1, " ...")
 		for index := range dnaSet {
-			pop := CreatePopulation(DIM, POPSIZE, MAXIT, LB, UB)
+			pop := CreatePopulation(DIM, POPSIZE, MAXIT, LB, UB, dnaSet[index])
 			fitFunc := FitnessCall(dnaSet, index, fitChan)
 			inv := pop.UpdatePopulation(fitFunc)
-			if it == 0 || inv.fitness < dnaSet[index].fitness {
-				dnaSet[index] = inv
-			}
+
+			dnaSet[index] = inv
 		}
 		fmt.Println("Done")
 		for ind, inv := range dnaSet {
@@ -67,11 +67,4 @@ func RandomDNASet(dim, size uint) []individual {
 	pop := CreatePopulation(dim, size, 0, 0, 3)
 	//pop.Fitness(fitFunc)
 	return pop.individuals
-}
-func sum(l []float64) float64 {
-	var s float64
-	for i := range l {
-		s += l[i]
-	}
-	return s
 }

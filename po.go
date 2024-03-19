@@ -8,6 +8,12 @@ import (
 	"time"
 )
 
+// 我好像想到问题所有了
+// 新产生的DNA序列时，适应度值是与前辈与比较
+// 但是前辈的适应度值是基于它当时的环境来计算的
+// 也就是说，这对新人是不公平的
+// ** 但是我还是无法理解为什么相似性会比H测度高很多
+
 type individual struct {
 	// Since variance is store in type float64, it is necessary to define another var to store DNA base type.
 	// Type cannot be converted inherent.
@@ -42,10 +48,10 @@ func createIndividual(dim uint, lb, ub float64) individual {
 	return inv
 }
 
-func CreatePopulation(dim, size uint, maxIteration uint, lb, ub float64) *population {
+func CreatePopulation(dim, size uint, maxIteration uint, lb, ub float64, inv individual) *population {
 	pop := new(population)
 	pop.dim = dim
-	pop.size = size
+	pop.size = size + 1
 	pop.lb, pop.ub = lb, ub
 	pop.maxIteration = maxIteration
 
@@ -53,7 +59,7 @@ func CreatePopulation(dim, size uint, maxIteration uint, lb, ub float64) *popula
 	for i := range pop.individuals {
 		pop.individuals[i] = createIndividual(dim, lb, ub)
 	}
-
+	pop.individuals = append(pop.individuals, inv)
 	return pop
 }
 

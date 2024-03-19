@@ -7,12 +7,13 @@ import (
 	"sync"
 )
 
+var minCt, minHp, minHm, minSm = 400.0, 400.0, 400.0, 400.0
+
 func FitnessCall(dnaSet DNASet, index int, fitChan *FitChan) func(individuals []individual) int {
 	seqSet := make([]DNAAnalysis.Seq, len(dnaSet))
 	for i := range seqSet {
 		seqSet[i] = make(DNAAnalysis.Seq, DIM)
 	}
-	minCt, minHp, minHm, minSm := 400.0, 400.0, 400.0, 400.0
 	for i := range dnaSet {
 		copy(seqSet[i], dnaSet[i].seq)
 	}
@@ -189,7 +190,7 @@ func mtDiviant(values, compared []float64) {
 		}
 		div += math.Pow((value-avg)/(maxVal-minVal), 2)
 		div /= DNASIZE
-		values[i] = max(div, 1e-6)
+		values[i] = max(div, MINVALUE)
 	}
 }
 
@@ -220,6 +221,14 @@ func avgTableRow[T int | float64](table [][]T) []float64 {
 func norm(values []float64, minVal, maxVal float64) {
 	for i, _ := range values {
 		values[i] = (values[i] - minVal) / (maxVal - minVal)
-		values[i] = max(values[i], 2e-2)
+		values[i] = max(values[i], MINVALUE)
 	}
+}
+
+func sum(l []float64) float64 {
+	var s float64
+	for i := range l {
+		s += l[i]
+	}
+	return s
 }
