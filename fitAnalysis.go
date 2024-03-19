@@ -41,7 +41,10 @@ func FitnessCall(dnaSet DNASet, index int, fitChan *FitChan) func(individuals []
 					if j == index {
 						fitChan.hmIn <- seqMapPair{i, j, invs[i].seq, invs[i].seq}
 					} else {
-						fitChan.hmIn <- seqMapPair{i, j, invs[i].seq, seqSet[j]}
+						// 正常的算法
+						//fitChan.hmIn <- seqMapPair{i, j, invs[i].seq, seqSet[j]}
+						// 交换前后
+						fitChan.hmIn <- seqMapPair{i, j, seqSet[j], invs[i].seq}
 					}
 				}
 			}
@@ -52,7 +55,10 @@ func FitnessCall(dnaSet DNASet, index int, fitChan *FitChan) func(individuals []
 					if j == index {
 						continue
 					} else {
-						fitChan.smIn <- seqMapPair{i, j, invs[i].seq, seqSet[j]}
+						// 正常的算法
+						//fitChan.smIn <- seqMapPair{i, j, invs[i].seq, seqSet[j]}
+						// 交换前后
+						fitChan.smIn <- seqMapPair{i, j, seqSet[j], invs[i].seq}
 					}
 				}
 			}
@@ -152,6 +158,11 @@ func FitnessCall(dnaSet DNASet, index int, fitChan *FitChan) func(individuals []
 		bestInd := 0
 		var bestFit float64 = 0
 		for i := 0; i < len(invs); i++ {
+			invs[i].ct = continuityList[i]
+			invs[i].hp = hairpinList[i]
+			invs[i].hm = hmList[i]
+			invs[i].sm = smList[i]
+			invs[i].mt = mtList[i]
 			invs[i].fitness = continuityList[i] * hairpinList[i] * hmList[i] * smList[i] * mtList[i]
 			if i == 0 || invs[i].fitness < bestFit {
 				bestInd = i

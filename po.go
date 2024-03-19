@@ -13,6 +13,11 @@ type individual struct {
 	// Type cannot be converted inherent.
 	variance []float64
 	seq      DNAAnalysis.Seq
+	ct       float64
+	hp       float64
+	hm       float64
+	sm       float64
+	mt       float64
 	fitness  float64
 }
 
