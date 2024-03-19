@@ -20,7 +20,7 @@ func main() {
 	for it := 0; it < DNASETITERATION; it++ {
 		fmt.Print("DNASet iteration ", it+1, " ...")
 		for index := range dnaSet {
-			pop := CreatePopulation(DIM, POPSIZE, MAXIT, LB, UB, dnaSet[index])
+			pop := CreatePopulation(DIM, POPSIZE, MAXIT, LB, UB, &(dnaSet[index]))
 			fitFunc := FitnessCall(dnaSet, index, fitChan)
 			inv := pop.UpdatePopulation(fitFunc)
 
@@ -64,7 +64,7 @@ func main() {
 }
 
 func RandomDNASet(dim, size uint) []individual {
-	pop := CreatePopulation(dim, size, 0, 0, 3)
+	pop := CreatePopulation(dim, size, 0, 0, 3, nil)
 	//pop.Fitness(fitFunc)
 	return pop.individuals
 }

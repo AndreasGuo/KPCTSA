@@ -48,10 +48,12 @@ func createIndividual(dim uint, lb, ub float64) individual {
 	return inv
 }
 
-func CreatePopulation(dim, size uint, maxIteration uint, lb, ub float64, inv individual) *population {
+func CreatePopulation(dim, size uint, maxIteration uint, lb, ub float64, inv *individual) *population {
 	pop := new(population)
 	pop.dim = dim
-	pop.size = size + 1
+	if inv != nil {
+		pop.size = size + 1
+	}
 	pop.lb, pop.ub = lb, ub
 	pop.maxIteration = maxIteration
 
@@ -59,7 +61,7 @@ func CreatePopulation(dim, size uint, maxIteration uint, lb, ub float64, inv ind
 	for i := range pop.individuals {
 		pop.individuals[i] = createIndividual(dim, lb, ub)
 	}
-	pop.individuals = append(pop.individuals, inv)
+	pop.individuals = append(pop.individuals, *inv)
 	return pop
 }
 
