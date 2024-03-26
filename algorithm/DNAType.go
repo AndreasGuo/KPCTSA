@@ -3,6 +3,7 @@ package algorithm
 import (
 	"GoDNA/DNAAnalysis"
 	"fmt"
+	"math"
 	"math/rand"
 	"time"
 )
@@ -32,7 +33,7 @@ func CreateDNAAgent[T int | float64](dim int, lb, ub float64) DNAAgent[T] {
 	// init raw variance
 	agent.Variance = make([]float64, dim)
 	for i := 0; i < dim; i++ {
-		agent.Variance[i] = rand.Float64()*(ub-lb) + lb
+		agent.Variance[i] = math.Round(rand.Float64()*(ub-lb) + lb)
 	}
 	agent.RepairAndToSeq()
 	return agent
@@ -76,6 +77,7 @@ func (dnaAgent *DNAAgent[T]) RepairAndToSeq() {
 		}
 	}
 
+	dnaAgent.Seq = make([]int, len(dnaAgent.Variance))
 	for i, value := range dnaAgent.Variance {
 		switch int(value) {
 		case 0:

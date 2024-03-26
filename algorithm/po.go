@@ -15,7 +15,7 @@ func (po *PO) Initialize(dim, size, maxIteration int,
 	lb, ub float64,
 	fitnessFunc func([]DNAAgent[float64]) [][]float64,
 	agent DNAAgent[float64]) {
-	pop := InitDNAPopulation[float64](dim, size, maxIteration, lb, ub, agent)
+	pop := InitDNAPopulation(dim, size, maxIteration, lb, ub, agent)
 	po.pop = &pop
 	po.fitnessFunc = fitnessFunc
 	po.currentIt = 0
