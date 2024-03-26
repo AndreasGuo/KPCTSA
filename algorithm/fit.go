@@ -1,4 +1,4 @@
-package main
+package algorithm
 
 import (
 	"GoDNA/DNAAnalysis"
@@ -9,43 +9,45 @@ import (
 
 var minCt, minHp, minHm, minSm = 400.0, 400.0, 400.0, 400.0
 
-func FitnessCall(dnaSet DNASet, index int, fitChan *FitChan) func(individuals []individual) int {
+type DNASet []DNAAgent[float64]
+
+func FitnessCall(dnaSet DNASet, index int, fitChan *DNAAnalysis.FitChan, config *Config) func(individuals []DNAAgent[float64]) [][]float64 {
 	seqSet := make([]DNAAnalysis.Seq, len(dnaSet))
 	for i := range seqSet {
-		seqSet[i] = make(DNAAnalysis.Seq, DIM)
+		seqSet[i] = make(DNAAnalysis.Seq, config.DIM)
 	}
 	for i := range dnaSet {
-		copy(seqSet[i], dnaSet[i].seq)
+		copy(seqSet[i], dnaSet[i].Seq)
 	}
 
-	var mtValues = make([]float64, DNASIZE)
+	var mtValues = make([]float64, config.DNASIZE)
 	for i, seq := range seqSet {
-		fitChan.mtIn <- seqMapSingle{i, seq}
-		re := <-fitChan.mtRe
-		mtValues[re.index] = re.value
+		fitChan.MtIn <- DNAAnalysis.SeqMapSingle{i, seq}
+		re := <-fitChan.MtRe
+		mtValues[re.Index] = re.Value
 	}
 
-	return func(invs []individual) int {
+	return func(invs []DNAAgent[float64]) [][]float64 {
 		go func() {
 			for i := range invs {
-				fitChan.ctIn <- seqMapSingle{i, invs[i].seq}
+				fitChan.CtIn <- DNAAnalysis.SeqMapSingle{i, invs[i].Seq}
 			}
 		}()
 		go func() {
 			for i := range invs {
-				fitChan.hpIn <- seqMapSingle{i, invs[i].seq}
+				fitChan.HpIn <- DNAAnalysis.SeqMapSingle{i, invs[i].Seq}
 			}
 		}()
 		go func() {
 			for i := range invs {
 				for j := range seqSet {
 					if j == index {
-						fitChan.hmIn <- seqMapPair{i, j, invs[i].seq, invs[i].seq}
+						fitChan.HmIn <- DNAAnalysis.SeqMapPair{i, j, invs[i].Seq, invs[i].Seq}
 					} else {
 						// 正常的算法
 						//fitChan.hmIn <- seqMapPair{i, j, invs[i].seq, seqSet[j]}
 						// 交换前后
-						fitChan.hmIn <- seqMapPair{i, j, seqSet[j], invs[i].seq}
+						fitChan.HmIn <- DNAAnalysis.SeqMapPair{i, j, seqSet[j], invs[i].Seq}
 					}
 				}
 			}
@@ -59,14 +61,14 @@ func FitnessCall(dnaSet DNASet, index int, fitChan *FitChan) func(individuals []
 						// 正常的算法
 						//fitChan.smIn <- seqMapPair{i, j, invs[i].seq, seqSet[j]}
 						// 交换前后
-						fitChan.smIn <- seqMapPair{i, j, seqSet[j], invs[i].seq}
+						fitChan.SmIn <- DNAAnalysis.SeqMapPair{i, j, seqSet[j], invs[i].Seq}
 					}
 				}
 			}
 		}()
 		go func() {
 			for i := range invs {
-				fitChan.mtIn <- seqMapSingle{i, invs[i].seq}
+				fitChan.MtIn <- DNAAnalysis.SeqMapSingle{i, invs[i].Seq}
 			}
 		}()
 
@@ -87,23 +89,23 @@ func FitnessCall(dnaSet DNASet, index int, fitChan *FitChan) func(individuals []
 		group.Add(5)
 		go func() {
 			for i := 0; i < len(invs); i++ {
-				ctRe := <-fitChan.ctRe
-				continuityList[ctRe.index] = ctRe.value
+				ctRe := <-fitChan.CtRe
+				continuityList[ctRe.Index] = ctRe.Value
 			}
 			group.Done()
 		}()
 		go func() {
 			for i := 0; i < len(invs); i++ {
-				hpRe := <-fitChan.hpRe
-				hairpinList[hpRe.index] = hpRe.value
+				hpRe := <-fitChan.HpRe
+				hairpinList[hpRe.Index] = hpRe.Value
 			}
 			group.Done()
 		}()
 		go func() {
 			for i := 0; i < len(invs); i++ {
 				for j := 0; j < len(seqSet); j++ {
-					hmRe := <-fitChan.hmRe
-					hmTable[hmRe.index1][hmRe.index2] = hmRe.value
+					hmRe := <-fitChan.HmRe
+					hmTable[hmRe.Index1][hmRe.Index2] = hmRe.Value
 				}
 			}
 			group.Done()
@@ -114,16 +116,16 @@ func FitnessCall(dnaSet DNASet, index int, fitChan *FitChan) func(individuals []
 					if j == index {
 						continue
 					}
-					smRe := <-fitChan.smRe
-					smTable[smRe.index1][smRe.index2] = smRe.value
+					smRe := <-fitChan.SmRe
+					smTable[smRe.Index1][smRe.Index2] = smRe.Value
 				}
 			}
 			group.Done()
 		}()
 		go func() {
 			for i := 0; i < len(invs); i++ {
-				mtRe := <-fitChan.mtRe
-				mtList[mtRe.index] = mtRe.value
+				mtRe := <-fitChan.MtRe
+				mtList[mtRe.Index] = mtRe.Value
 			}
 			group.Done()
 		}()
@@ -147,35 +149,40 @@ func FitnessCall(dnaSet DNASet, index int, fitChan *FitChan) func(individuals []
 		maxSm := slices.Max(smList)
 
 		// Norm
-		norm(continuityList, minCt, maxCt)
-		norm(hairpinList, minHp, maxHp)
-		norm(hmList, minHm, maxHm)
-		norm(smList, minSm, maxSm)
+		norm(continuityList, minCt, maxCt, config.MINVALUE)
+		norm(hairpinList, minHp, maxHp, config.MINVALUE)
+		norm(hmList, minHm, maxHm, config.MINVALUE)
+		norm(smList, minSm, maxSm, config.MINVALUE)
 
-		mtDiviant(mtList, mtValues)
+		mtDiviant(mtList, mtValues, config)
 
 		// Fitness
 		//fitness := make([]float64, len(invs))
-		bestInd := 0
-		var bestFit float64 = 0
-		for i := 0; i < len(invs); i++ {
-			invs[i].ct = continuityList[i]
-			invs[i].hp = hairpinList[i]
-			invs[i].hm = hmList[i]
-			invs[i].sm = smList[i]
-			invs[i].mt = mtList[i]
-			invs[i].fitness = continuityList[i] * hairpinList[i] * hmList[i] * smList[i] * mtList[i]
-			if i == 0 || invs[i].fitness < bestFit {
-				bestInd = i
-				bestFit = invs[i].fitness
-			}
-		}
+		//bestInd := 0
+		//var bestFit float64 = 0
+		//for i := 0; i < len(invs); i++ {
+		//	invs[i].Ct = continuityList[i]
+		//	invs[i].Hp = hairpinList[i]
+		//	invs[i].Hm = hmList[i]
+		//	invs[i].Sm = smList[i]
+		//	invs[i].Mt = mtList[i]
+		//	fitness := continuityList[i] * hairpinList[i] * hmList[i] * smList[i] * mtList[i]
+		//	if i == 0 || fitness < bestFit {
+		//		bestInd = i
+		//		bestFit = fitness
+		//	}
+		//}
 
-		return bestInd
+		fits := [][]float64{}
+		for i := 0; i < len(invs); i++ {
+			agentFit := []float64{continuityList[i], hairpinList[i], hmList[i], smList[i], mtList[i]}
+			fits = append(fits, agentFit)
+		}
+		return fits
 	}
 }
 
-func mtDiviant(values, compared []float64) {
+func mtDiviant(values, compared []float64, config *Config) {
 	var sumCompared float64 = 0
 	for _, value := range compared {
 		sumCompared += value
@@ -189,8 +196,8 @@ func mtDiviant(values, compared []float64) {
 			div += math.Pow((c-avg)/(maxVal-minVal), 2)
 		}
 		div += math.Pow((value-avg)/(maxVal-minVal), 2)
-		div /= DNASIZE
-		values[i] = max(div, MINVALUE)
+		div /= float64(config.DNASIZE)
+		values[i] = max(div, config.MINVALUE)
 	}
 }
 
@@ -218,7 +225,7 @@ func avgTableRow[T int | float64](table [][]T) []float64 {
 	return avgs
 }
 
-func norm(values []float64, minVal, maxVal float64) {
+func norm(values []float64, minVal, maxVal float64, MINVALUE float64) {
 	for i, _ := range values {
 		values[i] = (values[i] - minVal) / (maxVal - minVal)
 		values[i] = max(values[i], MINVALUE)

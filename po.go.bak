@@ -8,12 +8,6 @@ import (
 	"time"
 )
 
-// 我好像想到问题所有了
-// 新产生的DNA序列时，适应度值是与前辈与比较
-// 但是前辈的适应度值是基于它当时的环境来计算的
-// 也就是说，这对新人是不公平的
-// ** 但是我还是无法理解为什么相似性会比H测度高很多
-
 type individual struct {
 	// Since variance is store in type float64, it is necessary to define another var to store DNA base type.
 	// Type cannot be converted inherent.
