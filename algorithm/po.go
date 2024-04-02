@@ -8,12 +8,12 @@ import (
 type PO struct {
 	pop         *DNAPopulation
 	currentIt   int
-	fitnessFunc func([]DNAAgent[float64]) [][]float64
+	fitnessFunc func([]DNAAgent[float64]) ([][]float64, []float64)
 }
 
 func (po *PO) Initialize(dim, size, maxIteration int,
 	lb, ub float64,
-	fitnessFunc func([]DNAAgent[float64]) [][]float64,
+	fitnessFunc func([]DNAAgent[float64]) ([][]float64, []float64),
 	agent DNAAgent[float64]) {
 	pop := InitDNAPopulation(dim, size, maxIteration, lb, ub, agent)
 	po.pop = &pop
@@ -23,10 +23,10 @@ func (po *PO) Initialize(dim, size, maxIteration int,
 
 // PO + NDSort + Knee Point
 func (po *PO) Iteration() *DNAAgent[float64] {
-	fits := po.fitnessFunc(po.pop.individuals)
-	bestIndex := NDKPSort(fits)
+	fits, ZMin := po.fitnessFunc(po.pop.individuals)
+	selectedIndex := NDKPSort(fits, ZMin)
 
-	gbest := po.pop.individuals[bestIndex].Variance
+	gbest := po.pop.individuals[selectedIndex].Variance
 	alpha := rand.Float64() / 5
 	sita := rand.Float64() * math.Pi
 
@@ -51,11 +51,11 @@ func (po *PO) Iteration() *DNAAgent[float64] {
 			}
 			po.pop.individuals[i].RepairAndToSeq()
 		}
-		fits = po.fitnessFunc(po.pop.individuals)
-		bestIndex = NDKPSort(fits)
+		fits, ZMin = po.fitnessFunc(po.pop.individuals)
+		selectedIndex = NDKPSort(fits, ZMin)
 	}
 
-	return &po.pop.individuals[bestIndex]
+	return &po.pop.individuals[selectedIndex]
 }
 
 func levy(lh int) []float64 {
@@ -118,11 +118,11 @@ func st3(x, gbest []float64, dim, it, maxIt int, sita float64) {
 	}
 }
 
-func NDKPSort(fits [][]float64) int {
+func NDKPSort(fits [][]float64, ZMin []float64) int {
 	NDFront := NDSort(fits)
 	zeroPosition := findPosition(NDFront, 0)
 	zeroFront := extractMatrix(fits, zeroPosition)
-	bestIndex := KneePoint(zeroFront)
+	bestIndex, _ := bestIndex(zeroFront, ZMin)
 	return zeroPosition[bestIndex]
 }
 

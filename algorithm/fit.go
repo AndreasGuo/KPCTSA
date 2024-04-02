@@ -9,7 +9,7 @@ import (
 
 type DNASet []DNAAgent[float64]
 
-func FitnessCall(dnaSet DNASet, index int, fitChan *DNAAnalysis.FitChan, config *Config) func(individuals []DNAAgent[float64]) ([][]float64,[]float64) {
+func FitnessCall(dnaSet DNASet, index int, fitChan *DNAAnalysis.FitChan, config *Config) func(individuals []DNAAgent[float64]) ([][]float64, []float64) {
 	var minCt, minHp, minHm, minSm, minMT = 400.0, 400.0, 400.0, 400.0, 400.0
 	seqSet := make([]DNAAnalysis.Seq, len(dnaSet))
 	for i := range seqSet {
@@ -26,7 +26,7 @@ func FitnessCall(dnaSet DNASet, index int, fitChan *DNAAnalysis.FitChan, config 
 		mtValues[re.Index] = re.Value
 	}
 
-	return func(invs []DNAAgent[float64]) [][]float64, []float64 {
+	return func(invs []DNAAgent[float64]) ([][]float64, []float64) {
 		go func() {
 			for i := range invs {
 				fitChan.CtIn <- DNAAnalysis.SeqMapSingle{Index: i, Seq: invs[i].Seq}
