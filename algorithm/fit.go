@@ -7,11 +7,10 @@ import (
 	"sync"
 )
 
-var minCt, minHp, minHm, minSm = 400.0, 400.0, 400.0, 400.0
-
 type DNASet []DNAAgent[float64]
 
-func FitnessCall(dnaSet DNASet, index int, fitChan *DNAAnalysis.FitChan, config *Config) func(individuals []DNAAgent[float64]) [][]float64 {
+func FitnessCall(dnaSet DNASet, index int, fitChan *DNAAnalysis.FitChan, config *Config) func(individuals []DNAAgent[float64]) ([][]float64,[]float64) {
+	var minCt, minHp, minHm, minSm, minMT = 400.0, 400.0, 400.0, 400.0, 400.0
 	seqSet := make([]DNAAnalysis.Seq, len(dnaSet))
 	for i := range seqSet {
 		seqSet[i] = make(DNAAnalysis.Seq, config.DIM)
@@ -22,32 +21,32 @@ func FitnessCall(dnaSet DNASet, index int, fitChan *DNAAnalysis.FitChan, config 
 
 	var mtValues = make([]float64, config.DNASIZE)
 	for i, seq := range seqSet {
-		fitChan.MtIn <- DNAAnalysis.SeqMapSingle{i, seq}
+		fitChan.MtIn <- DNAAnalysis.SeqMapSingle{Index: i, Seq: seq}
 		re := <-fitChan.MtRe
 		mtValues[re.Index] = re.Value
 	}
 
-	return func(invs []DNAAgent[float64]) [][]float64 {
+	return func(invs []DNAAgent[float64]) [][]float64, []float64 {
 		go func() {
 			for i := range invs {
-				fitChan.CtIn <- DNAAnalysis.SeqMapSingle{i, invs[i].Seq}
+				fitChan.CtIn <- DNAAnalysis.SeqMapSingle{Index: i, Seq: invs[i].Seq}
 			}
 		}()
 		go func() {
 			for i := range invs {
-				fitChan.HpIn <- DNAAnalysis.SeqMapSingle{i, invs[i].Seq}
+				fitChan.HpIn <- DNAAnalysis.SeqMapSingle{Index: i, Seq: invs[i].Seq}
 			}
 		}()
 		go func() {
 			for i := range invs {
 				for j := range seqSet {
 					if j == index {
-						fitChan.HmIn <- DNAAnalysis.SeqMapPair{i, j, invs[i].Seq, invs[i].Seq}
+						fitChan.HmIn <- DNAAnalysis.SeqMapPair{Index1: i, Index2: j, Seq1: invs[i].Seq, Seq2: invs[i].Seq}
 					} else {
 						// 正常的算法
 						//fitChan.hmIn <- seqMapPair{i, j, invs[i].seq, seqSet[j]}
 						// 交换前后
-						fitChan.HmIn <- DNAAnalysis.SeqMapPair{i, j, seqSet[j], invs[i].Seq}
+						fitChan.HmIn <- DNAAnalysis.SeqMapPair{Index1: i, Index2: j, Seq1: seqSet[j], Seq2: invs[i].Seq}
 					}
 				}
 			}
@@ -61,14 +60,14 @@ func FitnessCall(dnaSet DNASet, index int, fitChan *DNAAnalysis.FitChan, config 
 						// 正常的算法
 						//fitChan.smIn <- seqMapPair{i, j, invs[i].seq, seqSet[j]}
 						// 交换前后
-						fitChan.SmIn <- DNAAnalysis.SeqMapPair{i, j, seqSet[j], invs[i].Seq}
+						fitChan.SmIn <- DNAAnalysis.SeqMapPair{Index1: i, Index2: j, Seq1: seqSet[j], Seq2: invs[i].Seq}
 					}
 				}
 			}
 		}()
 		go func() {
 			for i := range invs {
-				fitChan.MtIn <- DNAAnalysis.SeqMapSingle{i, invs[i].Seq}
+				fitChan.MtIn <- DNAAnalysis.SeqMapSingle{Index: i, Seq: invs[i].Seq}
 			}
 		}()
 
@@ -138,23 +137,24 @@ func FitnessCall(dnaSet DNASet, index int, fitChan *DNAAnalysis.FitChan, config 
 		// 考虑使用
 		// 1、七条的总值 || 平均值
 		// 2、它对于其他DNA链在两个数值上的贡献度
-		minCt := min(minCt, slices.Min(continuityList))
-		minHp := min(minHp, slices.Min(hairpinList))
-		minHm := min(minHm, slices.Min(hmList))
-		minSm := min(minSm, slices.Min(smList))
+		minCt = min(minCt, slices.Min(continuityList))
+		minHp = min(minHp, slices.Min(hairpinList))
+		minHm = min(minHm, slices.Min(hmList))
+		minSm = min(minSm, slices.Min(smList))
 
-		maxCt := slices.Max(continuityList)
-		maxHp := slices.Max(hairpinList)
-		maxHm := slices.Max(hmList)
-		maxSm := slices.Max(smList)
+		// maxCt := slices.Max(continuityList)
+		// maxHp := slices.Max(hairpinList)
+		// maxHm := slices.Max(hmList)
+		// maxSm := slices.Max(smList)
 
 		// Norm
-		norm(continuityList, minCt, maxCt, config.MINVALUE)
-		norm(hairpinList, minHp, maxHp, config.MINVALUE)
-		norm(hmList, minHm, maxHm, config.MINVALUE)
-		norm(smList, minSm, maxSm, config.MINVALUE)
+		// norm(continuityList, minCt, maxCt, config.MINVALUE)
+		// norm(hairpinList, minHp, maxHp, config.MINVALUE)
+		// norm(hmList, minHm, maxHm, config.MINVALUE)
+		// norm(smList, minSm, maxSm, config.MINVALUE)
 
 		mtDiviant(mtList, mtValues, config)
+		minMT = min(minMT, slices.Min(mtList))
 
 		// Fitness
 		//fitness := make([]float64, len(invs))
@@ -178,7 +178,7 @@ func FitnessCall(dnaSet DNASet, index int, fitChan *DNAAnalysis.FitChan, config 
 			agentFit := []float64{continuityList[i], hairpinList[i], hmList[i], smList[i], mtList[i]}
 			fits = append(fits, agentFit)
 		}
-		return fits
+		return fits, []float64{minCt, minHp, minHm, minSm, minMT}
 	}
 }
 
