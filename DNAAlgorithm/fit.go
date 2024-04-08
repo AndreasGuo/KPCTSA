@@ -1,24 +1,24 @@
-package algorithm
+package DNAAlgorithm
 
 import (
-	"GoDNA/DNAAlgorithm"
 	"GoDNA/DNAAnalysis"
+	"GoDNA/algorithm"
 	"math"
 	"slices"
 	"sync"
 )
 
-type DNASet []DNAAlgorithm.DNAAgent[float64]
-type FitFuncType func([]DNAAlgorithm.DNAAgent[float64]) ([][]float64, []float64)
+type DNASet []DNAAgent
+type FitFuncType func([]algorithm.Individual) ([][]float64, []float64)
 
-func FitnessCall(dnaSet DNASet, index int, fitChan *DNAAnalysis.FitChan, config *Config) FitFuncType {
+func FitnessCall(dnaSet []algorithm.Individual, index int, fitChan *DNAAnalysis.FitChan, config *Config) FitFuncType {
 	var minCt, minHp, minHm, minSm, minMT = 400.0, 400.0, 400.0, 400.0, 400.0
 	seqSet := make([]DNAAnalysis.Seq, len(dnaSet))
 	for i := range seqSet {
 		seqSet[i] = make(DNAAnalysis.Seq, config.DIM)
 	}
 	for i := range dnaSet {
-		copy(seqSet[i], dnaSet[i].Seq)
+		copy(seqSet[i], dnaSet[i].Represent())
 	}
 
 	var mtValues = make([]float64, config.DNASIZE)
@@ -28,27 +28,27 @@ func FitnessCall(dnaSet DNASet, index int, fitChan *DNAAnalysis.FitChan, config 
 		mtValues[re.Index] = re.Value
 	}
 
-	return func(invs []DNAAlgorithm.DNAAgent[float64]) ([][]float64, []float64) {
+	return func(invs []algorithm.Individual) ([][]float64, []float64) {
 		go func() {
 			for i := range invs {
-				fitChan.CtIn <- DNAAnalysis.SeqMapSingle{Index: i, Seq: invs[i].Seq}
+				fitChan.CtIn <- DNAAnalysis.SeqMapSingle{Index: i, Seq: invs[i].Represent()}
 			}
 		}()
 		go func() {
 			for i := range invs {
-				fitChan.HpIn <- DNAAnalysis.SeqMapSingle{Index: i, Seq: invs[i].Seq}
+				fitChan.HpIn <- DNAAnalysis.SeqMapSingle{Index: i, Seq: invs[i].Represent()}
 			}
 		}()
 		go func() {
 			for i := range invs {
 				for j := range seqSet {
 					if j == index {
-						fitChan.HmIn <- DNAAnalysis.SeqMapPair{Index1: i, Index2: j, Seq1: invs[i].Seq, Seq2: invs[i].Seq}
+						fitChan.HmIn <- DNAAnalysis.SeqMapPair{Index1: i, Index2: j, Seq1: invs[i].Represent(), Seq2: invs[i].Represent()}
 					} else {
 						// 正常的算法
 						//fitChan.hmIn <- seqMapPair{i, j, invs[i].seq, seqSet[j]}
 						// 交换前后
-						fitChan.HmIn <- DNAAnalysis.SeqMapPair{Index1: i, Index2: j, Seq1: seqSet[j], Seq2: invs[i].Seq}
+						fitChan.HmIn <- DNAAnalysis.SeqMapPair{Index1: i, Index2: j, Seq1: seqSet[j], Seq2: invs[i].Represent()}
 					}
 				}
 			}
@@ -62,14 +62,14 @@ func FitnessCall(dnaSet DNASet, index int, fitChan *DNAAnalysis.FitChan, config 
 						// 正常的算法
 						//fitChan.smIn <- seqMapPair{i, j, invs[i].seq, seqSet[j]}
 						// 交换前后
-						fitChan.SmIn <- DNAAnalysis.SeqMapPair{Index1: i, Index2: j, Seq1: seqSet[j], Seq2: invs[i].Seq}
+						fitChan.SmIn <- DNAAnalysis.SeqMapPair{Index1: i, Index2: j, Seq1: seqSet[j], Seq2: invs[i].Represent()}
 					}
 				}
 			}
 		}()
 		go func() {
 			for i := range invs {
-				fitChan.MtIn <- DNAAnalysis.SeqMapSingle{Index: i, Seq: invs[i].Seq}
+				fitChan.MtIn <- DNAAnalysis.SeqMapSingle{Index: i, Seq: invs[i].Represent()}
 			}
 		}()
 

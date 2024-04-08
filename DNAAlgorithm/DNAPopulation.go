@@ -19,12 +19,12 @@ func (pop *DNAPopulation) SetFitFunc(fit FitFuncType) {
 	pop.fit = fit
 }
 
-func (pop *DNAPopulation) SetConfig(config *algorithm.Config) {
+func (pop *DNAPopulation) SetConfig(config *Config) {
 	pop.size = config.POPSIZE
 	pop.varianceDim = config.DIM
 	pop.objectiveDim = 5
 	pop.lb = 0
-	pop.ub = 4
+	pop.ub = 3
 }
 
 func (pop *DNAPopulation) Size() int {
@@ -34,8 +34,9 @@ func (pop *DNAPopulation) Size() int {
 func (pop *DNAPopulation) Init() {
 	agents := make([]algorithm.Individual, pop.size)
 	for i := range agents {
-		agents[i] = CreateDNAAgent[float64](pop.varianceDim, pop.lb, pop.ub)
+		agents[i] = CreateDNAAgent(pop.varianceDim, pop.lb, pop.ub)
 	}
+	pop.individuals = agents
 }
 
 func (pop *DNAPopulation) Append(invs []algorithm.Individual) {

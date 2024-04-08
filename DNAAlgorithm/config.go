@@ -1,4 +1,4 @@
-package algorithm
+package DNAAlgorithm
 
 type Config struct {
 	DIM             int
@@ -12,6 +12,6 @@ type Config struct {
 }
 
 func DefaultConfig() *Config {
-	config := Config{20, 7, 30, 500, 0, 3, 200, 2e-2}
+	config := Config{20, 7, 30, 20, 0, 3, 20, 2e-2}
 	return &config
 }
