@@ -1,61 +1,65 @@
 package algorithm
 
 import (
+	"fmt"
 	"math"
 	"math/rand"
 )
 
 type PO struct {
-	pop         *DNAPopulation
-	currentIt   int
-	fitnessFunc func([]DNAAgent[float64]) ([][]float64, []float64)
+	Pop          Population
+	MaxIteration int
 }
 
-func (po *PO) Initialize(dim, size, maxIteration int,
-	lb, ub float64,
-	fitnessFunc func([]DNAAgent[float64]) ([][]float64, []float64),
-	agent DNAAgent[float64]) {
-	pop := InitDNAPopulation(dim, size, maxIteration, lb, ub, agent)
-	po.pop = &pop
-	po.fitnessFunc = fitnessFunc
-	po.currentIt = 0
+func (po *PO) Initialize(pop Population, inds ...Individual) {
+	pop.Init()
+	if inds != nil && len(inds) > 0 {
+		pop.Append(inds)
+	}
+	po.Pop = pop
 }
 
 // PO + NDSort + Knee Point
-func (po *PO) Iteration() *DNAAgent[float64] {
-	fits, ZMin := po.fitnessFunc(po.pop.individuals)
+func (po *PO) Iteration() Individual {
+	fits := po.Pop.Fit()
+	ZMin := po.Pop.ZMin()
 	selectedIndex := NDKPSort(fits, ZMin)
 
-	gbest := po.pop.individuals[selectedIndex].Variance
+	gbest := po.Pop.At(selectedIndex).Variance()
 	alpha := rand.Float64() / 5
 	sita := rand.Float64() * math.Pi
 
-	for it := 0; it < int(po.pop.maxIteration); it++ {
-		for i := 0; i < int(po.pop.size); i++ {
+	for it := 0; it < int(po.MaxIteration); it++ {
+		fmt.Print("\r", it)
+		for i := 0; i < int(po.Pop.Size()); i++ {
 			st := rand.Intn(4)
+			x := po.Pop.At(i).Variance()
 			switch st {
 			case 0:
-				st0(po.pop.individuals[i].Variance, gbest, int(po.pop.dim), it, int(po.pop.maxIteration))
+				st0(x, gbest, po.Pop.VarianceDim(), it, po.MaxIteration)
 			case 1:
-				st1(po.pop.individuals[i].Variance, gbest, int(po.pop.dim), it, int(po.pop.maxIteration))
+				st1(x, gbest, po.Pop.VarianceDim(), it, po.MaxIteration)
 			case 2:
-				st2(po.pop.individuals[i].Variance, gbest, int(po.pop.dim), it, int(po.pop.maxIteration), alpha)
+				st2(x, gbest, po.Pop.VarianceDim(), it, po.MaxIteration, alpha)
 			case 3:
-				st3(po.pop.individuals[i].Variance, gbest, int(po.pop.dim), it, int(po.pop.maxIteration), sita)
+				st3(x, gbest, po.Pop.VarianceDim(), it, po.MaxIteration, sita)
 			}
-			//round and boundary control
-			for j := 0; j < int(po.pop.dim); j++ {
-				po.pop.individuals[i].Variance[j] = math.Round(po.pop.individuals[i].Variance[j])
-				po.pop.individuals[i].Variance[j] = max(po.pop.individuals[i].Variance[j], po.pop.lb)
-				po.pop.individuals[i].Variance[j] = min(po.pop.individuals[i].Variance[j], po.pop.ub)
+
+			//boundary control
+			for j := 0; j < po.Pop.VarianceDim(); j++ {
+				x[j] = max(x[j], po.Pop.LB())
+				x[j] = min(x[j], po.Pop.UB())
 			}
-			po.pop.individuals[i].RepairAndToSeq()
+			po.Pop.UpdatePosition(i, x)
+			//po.pop.individuals[i].RepairAndToSeq()
 		}
-		fits, ZMin = po.fitnessFunc(po.pop.individuals)
+		po.Pop.PostWork()
+		fits = po.Pop.Fit()
+		ZMin = po.Pop.ZMin()
 		selectedIndex = NDKPSort(fits, ZMin)
 	}
 
-	return &po.pop.individuals[selectedIndex]
+	return po.Pop.At(selectedIndex)
 }
 
 func levy(lh int) []float64 {

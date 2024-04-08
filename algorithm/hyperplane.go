@@ -2,12 +2,13 @@ package algorithm
 
 import (
 	"errors"
-
 	"gonum.org/v1/gonum/mat"
 )
 
 const w float64 = 1e6
 
+// points: indicators matrix
+// ZMin: global min value for each dimension
 func bestIndex(points [][]float64, ZMin []float64) (int, error) {
 	n := len(points)
 	if n == 0 {
@@ -68,8 +69,9 @@ func bestIndex(points [][]float64, ZMin []float64) (int, error) {
 	aInv.Solve(extMtrix, ones)
 
 	intercept := make([]float64, m)
+	aInv.T()
 	for j := 0; j < m; j++ {
-		intercept[j] = aInv.At(0, j)
+		intercept[j] = aInv.At(j, 0)
 	}
 	for i := range intercept {
 		if intercept[i] == 0 {
