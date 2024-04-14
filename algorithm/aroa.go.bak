@@ -1,0 +1,153 @@
+package algorithm
+
+import (
+	"github.com/mkmik/argsort"
+	"math"
+	"math/rand"
+	"slices"
+)
+
+type AROA struct {
+	Pop                                    Population
+	MaxIteration                           int
+	c, fr1, fr2, p1, p2, Ef, tr1, tr2, tr3 float64
+	tmax, evalCounter                      int
+}
+
+func (A *AROA) initParam() {
+	A.c = 0.95
+	A.fr1 = 0.15
+	A.fr2 = 0.6
+	A.p1 = 0.2
+	A.p2 = 0.8
+	A.Ef = 0.4
+	A.tr1 = 0.9
+	A.tr2 = 0.85
+	A.tr3 = 0.9
+	A.tmax = int(math.Ceil(float64(A.MaxIteration-A.Pop.Size()) / float64((2 * A.Pop.Size()))))
+	A.evalCounter = 0
+}
+
+func (A *AROA) Initialize(pop Population, inds ...Individual) {
+	pop.Init()
+	if inds != nil && len(inds) > 0 {
+		pop.Append(inds)
+	}
+	A.Pop = pop
+	A.initParam()
+}
+
+func (A *AROA) Iteration() Individual {
+	fits := A.Pop.Fit()
+	ZMin := A.Pop.ZMin()
+	selectedIndex, _ := NDKPSort(fits, ZMin)
+	gbest := A.Pop.At(selectedIndex).Variance()
+	positions := A.Pop.Variance()
+
+	for it := range A.MaxIteration {
+		D := positionDis(positions)
+		m := hisTanH(it+1, A.MaxIteration, -2, 7)
+		for i := range A.Pop.Size() {
+			DiMax := slices.Max(D[i])
+			// k is number of neighbours
+			k := int(math.Floor((1-float64(it+1)/float64(A.MaxIteration))*float64(A.Pop.Size()))) + 1
+			idx := argsort.SortSlice(D[i], func(j, k int) bool {
+				return D[i][j] < D[i][k]
+			})
+			// Attraction-Repulsion operator
+			delta_ni := make([]float64, A.Pop.VarianceDim())
+			iVariance := A.Pop.At(i).Variance()
+			for j := range k {
+				I := 1 - D[i][idx[j]]/DiMax
+				//s := sum(fits[idx[j]]) - sum(fits[i])
+				s := rand.Intn(3) - 1
+				jVariance := A.Pop.At(idx[j]).Variance()
+				for d := range A.Pop.VarianceDim() {
+					delta_ni[d] += A.c * (iVariance[d] - jVariance[d]) * I * float64(s)
+				}
+			}
+			for d := range A.Pop.VarianceDim() {
+				delta_ni[d] = delta_ni[d] / float64(A.Pop.Size())
+			}
+			//ni := delta_ni
+			// Attraction to best solusion
+			var bi []float64 = make([]float64, A.Pop.VarianceDim())
+			if rand.Float64() < A.p1 {
+				// bi = m*c.*(rand(1,dim).*xbest - X_memory(i,:));
+				for d := range A.Pop.VarianceDim() {
+					bi[d] = m * A.c * (rand.Float64()*gbest[d] - iVariance[d])
+				}
+			} else {
+				for d := range A.Pop.VarianceDim() {
+					bi[d] = m * A.c * (gbest[d] - iVariance[d])
+				}
+			}
+			//Local search operators
+			ri := make([]float64, A.Pop.VarianceDim())
+			if rand.Float64() < A.p2 {
+				if rand.Float64() > 0.5*float64(it)/float64(A.MaxIteration)+0.25 {
+					u1 := make([]int, A.Pop.VarianceDim())
+					for i := range u1 {
+						if rand.Float64() > A.tr1 {
+							u1[i] = 1
+						} else {
+							u1[i] = 0
+						}
+					}
+					// ri = u1.*random('Normal', zeros(1,dim), fr1*(1-t/tmax)*(ub-lb));
+					for i := range u1 {
+						ri[i] = float64(u1[i]) * (rand.NormFloat64() + A.fr1*(1-float64(it)/float64(A.MaxIteration)*float64(A.Pop.UB()-A.Pop.LB())))
+					}
+				} else {
+					u2 := make([]int, A.Pop.VarianceDim())
+					for i := range u2 {
+						if rand.Float64() > A.tr2 {
+							u2[i] = 1
+						} else {
+							u2[i] = 0
+						}
+					}
+				}
+				// 放弃了，这个算法也是依赖于适应度值
+			}
+		}
+	}
+	return nil
+}
+
+func positionDis(positions [][]float64) [][]float64 {
+	n := len(positions)
+	disMatrix := make([][]float64, n)
+	for i := range n {
+		disMatrix[i] = make([]float64, n)
+	}
+
+	for i := range n {
+		for j := range i {
+			if i == j {
+				disMatrix[i][j] = 0
+			} else {
+				dis := euclidean(positions[i], positions[j])
+				disMatrix[i][j] = dis
+				disMatrix[j][i] = dis
+			}
+		}
+	}
+	return nil
+}
+
+func euclidean(lhs, rhs []float64) float64 {
+	sum := float64(0)
+	for i := range len(lhs) {
+		sum += math.Pow((lhs[i] - rhs[i]), 2)
+	}
+	return sum / float64(len(lhs))
+}
+
+func hisTanH(it, maxIt int, low, upper float64) float64 {
+	// z = 2*(t/tmax*(range(2)-range(1)) + range(1));
+	//    y = 0.5*((exp(z)-1)/(exp(z)+1) + 1);
+	z := 2 * (float64(it)/float64(maxIt)*(upper-low) + low)
+	y := 0.5 * ((math.Exp(z)-1)/(math.Exp(z)+1) + 1)
+	return y
+}

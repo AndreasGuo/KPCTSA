@@ -3,7 +3,6 @@ package DNAAlgorithm
 import (
 	"GoDNA/DNAAnalysis"
 	"GoDNA/algorithm"
-	"math"
 	"slices"
 	"sync"
 )
@@ -11,6 +10,7 @@ import (
 type DNASet []DNAAgent
 type FitFuncType func([]algorithm.Individual) ([][]float64, []float64)
 
+// 注意fit所给mt已经是偏离度了
 func FitnessCall(dnaSet []algorithm.Individual, index int, fitChan *DNAAnalysis.FitChan, config *Config) FitFuncType {
 	var minCt, minHp, minHm, minSm, minMT = 400.0, 400.0, 400.0, 400.0, 400.0
 	seqSet := make([]DNAAnalysis.Seq, len(dnaSet))
@@ -46,9 +46,9 @@ func FitnessCall(dnaSet []algorithm.Individual, index int, fitChan *DNAAnalysis.
 						fitChan.HmIn <- DNAAnalysis.SeqMapPair{Index1: i, Index2: j, Seq1: invs[i].Represent(), Seq2: invs[i].Represent()}
 					} else {
 						// 正常的算法
-						//fitChan.hmIn <- seqMapPair{i, j, invs[i].seq, seqSet[j]}
+						fitChan.HmIn <- DNAAnalysis.SeqMapPair{i, j, invs[i].Represent(), seqSet[j]}
 						// 交换前后
-						fitChan.HmIn <- DNAAnalysis.SeqMapPair{Index1: i, Index2: j, Seq1: seqSet[j], Seq2: invs[i].Represent()}
+						// fitChan.HmIn <- DNAAnalysis.SeqMapPair{Index1: i, Index2: j, Seq1: seqSet[j], Seq2: invs[i].Represent()}
 					}
 				}
 			}
@@ -60,9 +60,9 @@ func FitnessCall(dnaSet []algorithm.Individual, index int, fitChan *DNAAnalysis.
 						continue
 					} else {
 						// 正常的算法
-						//fitChan.smIn <- seqMapPair{i, j, invs[i].seq, seqSet[j]}
+						fitChan.SmIn <- DNAAnalysis.SeqMapPair{i, j, invs[i].Represent(), seqSet[j]}
 						// 交换前后
-						fitChan.SmIn <- DNAAnalysis.SeqMapPair{Index1: i, Index2: j, Seq1: seqSet[j], Seq2: invs[i].Represent()}
+						//fitChan.SmIn <- DNAAnalysis.SeqMapPair{Index1: i, Index2: j, Seq1: seqSet[j], Seq2: invs[i].Represent()}
 					}
 				}
 			}
@@ -178,6 +178,7 @@ func FitnessCall(dnaSet []algorithm.Individual, index int, fitChan *DNAAnalysis.
 		fits := [][]float64{}
 		for i := 0; i < len(invs); i++ {
 			agentFit := []float64{continuityList[i], hairpinList[i], hmList[i], smList[i], mtList[i]}
+			invs[i].SetObjs(agentFit)
 			fits = append(fits, agentFit)
 		}
 		return fits, []float64{minCt, minHp, minHm, minSm, minMT}
@@ -189,17 +190,18 @@ func mtDiviant(values, compared []float64, config *Config) {
 	for _, value := range compared {
 		sumCompared += value
 	}
+	avg := sumCompared / float64(len(compared))
 	for i, value := range values {
-		avg := (sumCompared + value) / float64(len(compared)+1)
-		var div float64 = 0
-		minVal := min(value, slices.Min(compared))
-		maxVal := max(value, slices.Max(compared))
-		for _, c := range compared {
-			div += math.Pow((c-avg)/(maxVal-minVal), 2)
-		}
-		div += math.Pow((value-avg)/(maxVal-minVal), 2)
-		div /= float64(config.DNASIZE)
-		values[i] = max(div, config.MINVALUE)
+		//avg := (sumCompared + value) / float64(len(compared)+1)
+		//var div float64 = 0
+		//minVal := min(value, slices.Min(compared))
+		//maxVal := max(value, slices.Max(compared))
+		//for _, c := range compared {
+		//	div += math.Pow((c-avg)/(maxVal-minVal), 2)
+		//}
+		//div += math.Pow((value-avg)/(maxVal-minVal), 2)
+		//div /= float64(config.DNASIZE)
+		values[i] = max(value-avg, config.MINVALUE)
 	}
 }
 

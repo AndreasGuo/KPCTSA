@@ -31,6 +31,10 @@ type Population interface {
 	LB() float64
 	UB() float64
 	PostWork()
+	Variance() [][]float64
+	Clone() Population
+	Join(Population)
+	Select([]int)
 }
 
 type Individual interface {
@@ -38,7 +42,12 @@ type Individual interface {
 	Objs() []float64
 	Variance() []float64
 	UpdatePosition([]float64)
+	// repair and fixGC, hook function
 	PostWork()
+	// this for dna Seq
 	Represent() []int
+	// this for dna seq tostr()
 	String() (string, error)
+	Clone() Individual
+	SetObjs([]float64)
 }

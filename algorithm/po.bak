@@ -1,0 +1,55 @@
+func st0(x, gbest []float64, dim, it, maxIt int) {
+	levyDim := levy(dim)
+	meanx := mean(x)
+	r := rand.Float64()
+	for i := 0; i < dim; i++ {
+		// X_new(j, :) = #inmatlab //(X(j, :) - GBestX) .* Levy(dim) + rand(1) * mean(X(j, :)) * (1 - i / Max_iter) ^ (2 * i / Max_iter);
+		x[i] = (x[i]-gbest[i])*levyDim[i] + r*meanx*math.Pow(1-float64(it)/float64(maxIt), 2*float64(it)/float64(maxIt))
+	}
+}
+
+func st1(x, gbest []float64, dim, it, maxIt int) {
+	// X_new(j, :) = X(j, :) + GBestX .* Levy(dim) + randn() * (1 - i / Max_iter) * ones(1, dim);
+	r := rand.NormFloat64()
+	levyDim := levy(dim)
+	for i := 0; i < dim; i++ {
+		x[i] = x[i] + gbest[i]*levyDim[i] + r*(1-float64(it)/float64(maxIt))
+	}
+}
+
+func st2(x, gbest []float64, dim, it, maxIt int) {
+	/*H = rand(1);
+	if H < 0.5
+		X_new(j, :) = X(j, :) + alpha * (1 - i / Max_iter) * (X(j, :) - mean(X(j, :)));
+	else
+		X_new(j, :) = X(j, :) + alpha * (1 - i / Max_iter) * exp(-j / (rand(1) * Max_iter));
+	end*/
+	meanx := mean(x)
+	alpha := rand.Float64() / 0.4 // /5
+	h := rand.Float64()
+	for i := 0; i < dim; i++ {
+		if h < 0.5 {
+			x[i] -= alpha * (1 - float64(it)/float64(maxIt)) * (x[i] - meanx)
+		} else {
+			x[i] += alpha * (1 - float64(it)/float64(maxIt)) * math.Exp(float64(-it)/(rand.Float64()*float64(maxIt)))
+		}
+	}
+}
+
+// X_new(j, :) = X(j, :) + rand() * cos((pi *i )/ (2 * Max_iter)) * (GBestX - X(j, :)) - cos(sita) * (i / Max_iter) ^ (2 / Max_iter) * (X(j, :) - GBestX);
+func st3(x, gbest []float64, dim, it, maxIt int, sita float64) {
+	r := rand.Float64()
+	for i := 0; i < dim; i++ {
+		x[i] += r*math.Cos(math.Pi*float64(it))/(2*float64(maxIt))*(gbest[i]-x[i]) -
+			math.Cos(sita)*math.Pow((float64(it)/float64(maxIt)), 2/float64(maxIt))*
+				x[i] - gbest[i]
+	}
+}
+
+func mean[T int | float64](x []T) float64 {
+	var sum T = 0
+	for i := 0; i < len(x); i++ {
+		sum += x[i]
+	}
+	return float64(sum) / float64(len(x))
+}

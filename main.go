@@ -15,20 +15,33 @@ func main() {
 
 	var config = DNAAlgorithm.DefaultConfig()
 	var dnaSet = RandomDNASet(config.DIM, config.DNASIZE)
+
+	// init objs
+	for i := range dnaSet {
+		fitFunc := DNAAlgorithm.FitnessCall(dnaSet, i, fitChan, config)
+		singleInvSlice := []algorithm.Individual{dnaSet[i]}
+		fits, _ := fitFunc(singleInvSlice)
+		dnaSet[i].SetObjs(fits[0])
+	}
+
 	result := ""
 	for it := 0; it < config.DNASETITERATION; it++ {
 		fmt.Println("DNASet iteration ", it+1, " ...")
+		index := chooseInvToOpt(dnaSet)
+		fmt.Println("To Optimize: ", index)
 
-		for index := range dnaSet {
-			fitFunc := DNAAlgorithm.FitnessCall(dnaSet, index, fitChan, config)
-			alg := algorithm.PO{Pop: nil, MaxIteration: config.MAXIT}
-			pop := new(DNAAlgorithm.DNAPopulation)
-			pop.SetConfig(config)
-			pop.SetFitFunc(fitFunc)
-			alg.Initialize(pop, dnaSet[index])
-			inv := alg.Iteration()
-			dnaSet[index] = inv
-		}
+		//for index := range dnaSet {
+		fitFunc := DNAAlgorithm.FitnessCall(dnaSet, index, fitChan, config)
+		alg := algorithm.PO{Pop: nil, MaxIteration: config.MAXIT}
+		// alg := algorithm.BKA{Pop: nil, MaxIteration: config.MAXIT}
+		pop := new(DNAAlgorithm.DNAPopulation)
+		pop.SetConfig(config)
+		pop.SetFitFunc(fitFunc)
+		alg.Initialize(pop, dnaSet[index])
+		inv := alg.Iteration()
+		dnaSet[index] = inv
+		//}
+
 		fmt.Println("\rDone")
 		result = ""
 		for ind, inv := range dnaSet {
@@ -90,4 +103,38 @@ func sum[T int | float64](lt []T) T {
 		s += lt[i]
 	}
 	return s
+}
+
+func chooseInvToOpt(dnaSet []algorithm.Individual) (idx int) {
+	if len(dnaSet) == 0 {
+		panic("no inv")
+	}
+	ZMin := make([]float64, len(dnaSet[0].Objs()))
+	for j := range ZMin {
+		ZMin[j] = 400
+	}
+	for _, dna := range dnaSet {
+		objs := dna.Objs()
+		for i := range len(ZMin) {
+			ZMin[i] = min(ZMin[i], objs[i])
+		}
+	}
+	distance := make([]float64, len(dnaSet))
+	for i, dna := range dnaSet {
+		objs := dna.Objs()
+		distance[i] = 1
+		for j := range ZMin {
+			//distance[i] += math.Pow(objs[j]-ZMin[j], 2)
+			distance[i] *= max(1, objs[j]-ZMin[j])
+		}
+	}
+
+	dix := 0.0
+	for i := range distance {
+		if distance[i] > dix {
+			idx = i
+			dix = distance[i]
+		}
+	}
+	return idx
 }

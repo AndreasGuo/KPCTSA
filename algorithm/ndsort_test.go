@@ -4,10 +4,9 @@ import "testing"
 
 func TestNDSort(t *testing.T) {
 	data := [][]int{
-		{39, 27, 11, 42},
-		{10, 93, 91, 90},
-		{54, 78, 56, 89},
-		{24, 64, 20, 65},
+		{0, 1, 1, 1},
+		{0, 0, 5, 3},
+		{0, 0, 6, 3},
 	}
 	t.Log(NDSort(data))
 }

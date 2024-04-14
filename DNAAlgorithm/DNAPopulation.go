@@ -15,6 +15,52 @@ type DNAPopulation struct {
 	zmin         []float64
 }
 
+func (pop *DNAPopulation) Select(indicies []int) {
+	pop.size = len(indicies)
+	newIndividuals := make([]algorithm.Individual, 0)
+	for i := range indicies {
+		newIndividuals = append(newIndividuals, pop.At(i))
+	}
+	pop.individuals = newIndividuals
+}
+
+func (pop *DNAPopulation) Clone() algorithm.Population {
+	newPop := DNAPopulation{
+		size:         pop.size,
+		varianceDim:  pop.varianceDim,
+		objectiveDim: pop.objectiveDim,
+		lb:           pop.lb,
+		ub:           pop.ub,
+		fit:          pop.fit,
+		zmin:         pop.zmin,
+	}
+	newIndividuals := make([]algorithm.Individual, pop.size)
+	for i := range newIndividuals {
+		newIndividuals[i] = pop.individuals[i].Clone()
+	}
+	newPop.individuals = newIndividuals
+	return &newPop
+}
+
+func (pop *DNAPopulation) Join(population algorithm.Population) {
+	newIndividuals := make([]algorithm.Individual, population.Size())
+	for i := range population.Size() {
+		newIndividuals[i] = population.At(i).Clone()
+	}
+	pop.Append(newIndividuals)
+	pop.size = len(pop.individuals)
+}
+
+func (pop *DNAPopulation) Variance() [][]float64 {
+	out := make([][]float64, pop.Size())
+	for i := range len(pop.individuals) {
+		v := make([]float64, pop.varianceDim)
+		copy(v, pop.individuals[i].Variance())
+		out[i] = v
+	}
+	return out
+}
+
 func (pop *DNAPopulation) SetFitFunc(fit FitFuncType) {
 	pop.fit = fit
 }
@@ -28,7 +74,7 @@ func (pop *DNAPopulation) SetConfig(config *Config) {
 }
 
 func (pop *DNAPopulation) Size() int {
-	return pop.size
+	return len(pop.individuals)
 }
 
 func (pop *DNAPopulation) Init() {
@@ -43,6 +89,7 @@ func (pop *DNAPopulation) Append(invs []algorithm.Individual) {
 	if invs != nil && len(invs) > 0 {
 		for i := range invs {
 			pop.individuals = append(pop.individuals, invs[i])
+			pop.size += 1
 		}
 	}
 }

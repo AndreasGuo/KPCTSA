@@ -7,30 +7,8 @@ import (
 
 const w float64 = 1e6
 
-// points: indicators matrix
-// ZMin: global min value for each dimension
-func bestIndex(points [][]float64, ZMin []float64) (int, error) {
-	n := len(points)
-	if n == 0 {
-		return 0, errors.New("There is no points")
-	}
-	m := len(points[0])
-	if m == 0 {
-		return 0, errors.New("Dimension is zero")
-	}
-
+func asf(n, m int, localPoints [][]float64) []float64 {
 	extrems := []float64{}
-
-	localPoints := make([][]float64, n)
-	copy(localPoints, points)
-
-	for i := 0; i < n; i++ {
-		for j := 0; j < m; j++ {
-			localPoints[i][j] -= ZMin[j]
-		}
-	}
-
-	// ASF
 	for j := 0; j < m; j++ {
 		minASFIndexDimM := 0
 		minASF := -1.0
@@ -52,11 +30,11 @@ func bestIndex(points [][]float64, ZMin []float64) (int, error) {
 		extrems = append(extrems, localPoints[minASFIndexDimM]...)
 
 	}
-	for i := 0; i < n; i++ {
-		for j := 0; j < m; j++ {
-			localPoints[i][j] -= ZMin[j]
-		}
-	}
+	//for i := 0; i < n; i++ {
+	//	for j := 0; j < m; j++ {
+	//		localPoints[i][j] -= ZMin[j]
+	//	}
+	//}
 
 	one := make([]float64, m)
 	for i := range one {
@@ -84,8 +62,38 @@ func bestIndex(points [][]float64, ZMin []float64) (int, error) {
 			intercept[i] = 1.0 / intercept[i]
 		}
 	}
+	return intercept
+}
+
+// points: indicators matrix
+// ZMin: global min value for each dimension
+func bestIndex(points [][]float64, ZMin []float64) (int, []float64, error) {
+	n := len(points)
+	if n == 0 {
+		return 0, nil, errors.New("There is no points")
+	}
+	m := len(points[0])
+	if m == 0 {
+		return 0, nil, errors.New("Dimension is zero")
+	}
+
+	localPoints := make([][]float64, n)
+	for i := range localPoints {
+		copy(localPoints[i], points[i])
+	}
+	copy(localPoints, points)
+
+	for i := 0; i < n; i++ {
+		for j := 0; j < m; j++ {
+			localPoints[i][j] -= ZMin[j]
+		}
+	}
+
+	// ASF
+	intercept := asf(n, m, localPoints)
 
 	// 点到平面距离，并不是真的距离，只是不影响比较大小
+	distances := make([]float64, len(localPoints))
 	minDistance := -1.1
 	index := 0
 	for i := range localPoints {
@@ -93,10 +101,19 @@ func bestIndex(points [][]float64, ZMin []float64) (int, error) {
 		for j := 0; j < m; j++ {
 			distance += intercept[j] * localPoints[i][j]
 		}
+		distances[i] = distance
 		if index == 0 || distance < minDistance {
 			index = i
 			minDistance = distance
 		}
 	}
-	return index, nil
+	return index, distances, nil
+}
+
+func distanceToPlane(intercept []float64, point []float64) float64 {
+	distance := float64(0)
+	for j := range intercept {
+		distance += intercept[j] * point[j]
+	}
+	return distance
 }

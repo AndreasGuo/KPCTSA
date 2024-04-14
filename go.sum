@@ -22,6 +22,8 @@ github.com/golang/freetype v0.0.0-20170609003504-e2365dfdc4a0/go.mod h1:E/TSTwGw
 github.com/kisielk/gotool v1.0.0/go.mod h1:XhKaO+MFFWcvkIS/tQcRk01m1F5IRFswLeQ+oQHNcck=
 github.com/mimikwang/gomelt v1.0.0 h1:1Ha3gpcAoAeUOYYmmpIgG2+ldwzF0ko3SVRl+x57Vvs=
 github.com/mimikwang/gomelt v1.0.0/go.mod h1:glRpQHLZlXsT6gTnt+K6HllkidaN9L9DC9/5G95EGIE=
+github.com/mkmik/argsort v1.1.0 h1:+L/3fsTV3cf+rwWeVCJGH8mn3SI4zmi3e9KW2SbEBPI=
+github.com/mkmik/argsort v1.1.0/go.mod h1:p7hnzFvQ7+BTf9C0IvBxJhd+EakmJntn5NFpzFDw4Do=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/stretchr/testify v1.7.1 h1:5TQK59W5E3v0r2duFAb7P95B6hEeOyEnHRa8MjYSMTY=

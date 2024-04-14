@@ -2,6 +2,7 @@ package DNAAlgorithm
 
 import (
 	"GoDNA/DNAAnalysis"
+	"GoDNA/algorithm"
 	"fmt"
 	"math"
 	"math/rand"
@@ -16,6 +17,34 @@ type DNAAgent struct {
 	Hm             float64
 	Sm             float64
 	Mt             float64
+}
+
+func (dnaAgent *DNAAgent) SetObjs(objs []float64) {
+	dnaAgent.Ct = objs[0]
+	dnaAgent.Hp = objs[1]
+	dnaAgent.Hm = objs[2]
+	dnaAgent.Sm = objs[3]
+	dnaAgent.Mt = objs[4]
+}
+
+func (dnaAgent *DNAAgent) Clone() algorithm.Individual {
+	variance := dnaAgent.DNARowVariance
+	seq := dnaAgent.Seq
+
+	newVariance := make([]float64, len(variance))
+	newSeq := make(DNAAnalysis.Seq, len(seq))
+
+	copy(newVariance, variance)
+	copy(newSeq, seq)
+	agent := DNAAgent{newVariance,
+		newSeq,
+		dnaAgent.Ct,
+		dnaAgent.Hp,
+		dnaAgent.Hm,
+		dnaAgent.Sm,
+		dnaAgent.Mt,
+	}
+	return &agent
 }
 
 func (dnaAgent *DNAAgent) String() (string, error) {
@@ -61,7 +90,7 @@ func (dnaAgent *DNAAgent) PostWork() {
 
 func (dnaAgent *DNAAgent) RepairAndToSeq() {
 	dnaAgent.fixGCContent()
-	dnaAgent.runlongConstraint()
+	//dnaAgent.NoRunLength()
 	// generate DNA seq.
 	dnaAgent.Seq = convSeq(dnaAgent.DNARowVariance)
 }
@@ -104,9 +133,42 @@ func (dnaAgent *DNAAgent) fixGCContent() {
 	}
 }
 
-func (DNAAgent *DNAAgent) runlongConstraint() {
+func (agent *DNAAgent) NoRunLength() {
 	// Assure no continuous identical bases
-	// TODO
+	for i := 0; i < len(agent.DNARowVariance)-1; i++ {
+		if agent.DNARowVariance[i] == agent.DNARowVariance[i+1] {
+			// i+1位会被换掉
+			for j := 0; j < len(agent.DNARowVariance); j++ {
+				if i == j || i+1 == j {
+					continue
+				}
+				// 要满足的条件：
+				// 1 被换过来的碱基(j)与i不同
+				// 2 j<i时要左右都不同，j>i时只保证与左不同
+				if agent.DNARowVariance[j] != agent.DNARowVariance[i] {
+					if j < i {
+						if j == 0 && agent.DNARowVariance[i+1] != agent.DNARowVariance[j+1] {
+							agent.DNARowVariance[j], agent.DNARowVariance[i+1] = agent.DNARowVariance[i+1], agent.DNARowVariance[j]
+							break
+						} else if agent.DNARowVariance[i+1] != agent.DNARowVariance[j+1] && agent.DNARowVariance[i+1] != agent.DNARowVariance[j-1] {
+							agent.DNARowVariance[j], agent.DNARowVariance[i+1] = agent.DNARowVariance[i+1], agent.DNARowVariance[j]
+							break
+						}
+					} else if j == i+2 {
+						if agent.DNARowVariance[j] != agent.DNARowVariance[i+1] {
+							agent.DNARowVariance[j], agent.DNARowVariance[i+1] = agent.DNARowVariance[i+1], agent.DNARowVariance[j]
+							break
+						}
+					} else {
+						if agent.DNARowVariance[i+1] != agent.DNARowVariance[j-1] {
+							agent.DNARowVariance[j], agent.DNARowVariance[i+1] = agent.DNARowVariance[i+1], agent.DNARowVariance[j]
+							break
+						}
+					}
+				}
+			}
+		}
+	}
 }
 
 func convSeq(variance []float64) DNAAnalysis.Seq {

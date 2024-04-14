@@ -2,6 +2,7 @@ package algorithm
 
 import (
 	"fmt"
+	"log"
 	"math"
 	"math/rand"
 )
@@ -21,42 +22,68 @@ func (po *PO) Initialize(pop Population, inds ...Individual) {
 
 // PO + NDSort + Knee Point
 func (po *PO) Iteration() Individual {
+	logger := log.Default()
+	islog := false
 	fits := po.Pop.Fit()
 	ZMin := po.Pop.ZMin()
-	selectedIndex := NDKPSort(fits, ZMin)
+	selectedIndex, _ := NDKPSort(fits, ZMin, po.Pop.Size())
 
 	gbest := po.Pop.At(selectedIndex).Variance()
-	alpha := rand.Float64() / 5
 	sita := rand.Float64() * math.Pi
 
 	for it := 0; it < int(po.MaxIteration); it++ {
 		fmt.Print("\r", it)
+		oldPop := po.Pop.Clone()
+		popMean := mean(po.Pop)
 		for i := 0; i < int(po.Pop.Size()); i++ {
 			st := rand.Intn(4)
 			x := po.Pop.At(i).Variance()
+			if islog {
+				logger.Println("it: ", it, "st: ", st)
+				logger.Println("origin variance: ", x)
+			}
+
 			switch st {
 			case 0:
-				st0(x, gbest, po.Pop.VarianceDim(), it, po.MaxIteration)
+				st0(x, gbest, popMean, po.Pop.VarianceDim(), it, po.MaxIteration)
 			case 1:
 				st1(x, gbest, po.Pop.VarianceDim(), it, po.MaxIteration)
 			case 2:
-				st2(x, gbest, po.Pop.VarianceDim(), it, po.MaxIteration, alpha)
+				st2(x, popMean, po.Pop.VarianceDim(), it, po.MaxIteration)
 			case 3:
 				st3(x, gbest, po.Pop.VarianceDim(), it, po.MaxIteration, sita)
 			}
-
+			out := make([]int, len(x))
+			for k := range x {
+				out[k] = int(math.Round(x[k]))
+			}
+			if islog {
+				logger.Println("After st: ", out)
+			}
 			//boundary control
 			for j := 0; j < po.Pop.VarianceDim(); j++ {
 				x[j] = max(x[j], po.Pop.LB())
 				x[j] = min(x[j], po.Pop.UB())
 			}
+			for k := range x {
+				out[k] = int(math.Round(x[k]))
+			}
+			if islog {
+				logger.Println("After boundary: ", out)
+			}
 			po.Pop.UpdatePosition(i, x)
-			//po.pop.individuals[i].RepairAndToSeq()
 		}
 		po.Pop.PostWork()
+
+		po.Pop.Join(oldPop)
+
 		fits = po.Pop.Fit()
 		ZMin = po.Pop.ZMin()
-		selectedIndex = NDKPSort(fits, ZMin)
+		bestIdx, selectedIndex := NDKPSort(fits, ZMin, po.Pop.Size()/2)
+		gbest = po.Pop.At(bestIdx).Variance()
+		po.Pop.Select(selectedIndex)
+
+		sita = rand.Float64() * math.Pi
 	}
 
 	return po.Pop.At(selectedIndex)
@@ -68,90 +95,77 @@ func levy(lh int) []float64 {
 	sigma /= math.Gamma(1+beta/2) * beta * math.Pow(1, (beta-1)/2)
 	sigma = math.Pow(sigma, 1/beta)
 	u := make([]float64, lh)
+	maxLevy := 0.0
 	for i := range u {
 		u[i] = rand.NormFloat64() / math.Pow(math.Abs(rand.NormFloat64()), 1/beta)
+		if math.Abs(u[i]) > maxLevy {
+			maxLevy = math.Abs(u[i])
+		}
+	}
+
+	for i := range u {
+		u[i] /= 1.1
+		//u[i] *= 1.2
 	}
 	return u
 }
-func st0(x, gbest []float64, dim, it, maxIt int) {
+
+func st0(x, gbest, popMean []float64, dim, it, maxIt int) {
 	levyDim := levy(dim)
-	meanx := mean(x)
-	r := rand.Float64()
+	p1 := float64(4)
 	for i := 0; i < dim; i++ {
-		// X_new(j, :) = #inmatlab //(X(j, :) - GBestX) .* Levy(dim) + rand(1) * mean(X(j, :)) * (1 - i / Max_iter) ^ (2 * i / Max_iter);
-		x[i] = (x[i]-gbest[i])*levyDim[i] + r*meanx*math.Pow(1-float64(it)/float64(maxIt), 2*float64(it)/float64(maxIt))
+		r := rand.Float64()
+		x[i] += (x[i] - gbest[i]) * levyDim[i] * r / p1
+		x[i] += (1 - r) * popMean[i] * math.Pow(1-float64(it)/float64(maxIt), 2*float64(it)/float64(maxIt)) / p1
 	}
 }
 
 func st1(x, gbest []float64, dim, it, maxIt int) {
-	// X_new(j, :) = X(j, :) + GBestX .* Levy(dim) + randn() * (1 - i / Max_iter) * ones(1, dim);
-	r := rand.NormFloat64()
 	levyDim := levy(dim)
+	p2 := float64(2)
 	for i := 0; i < dim; i++ {
-		x[i] = x[i] + gbest[i]*levyDim[i] + r*(1-float64(it)/float64(maxIt))
+		r := rand.NormFloat64()
+		x[i] += gbest[i]*levyDim[i]/p2 + r*(1-float64(it)/float64(maxIt))
 	}
 }
 
-func st2(x, gbest []float64, dim, it, maxIt int, alpha float64) {
-	/*H = rand(1);
-	if H < 0.5
-		X_new(j, :) = X(j, :) + alpha * (1 - i / Max_iter) * (X(j, :) - mean(X(j, :)));
-	else
-	X_new(j, :) = X(j, :) + alpha * (1 - i / Max_iter) * exp(-j / (rand(1) * Max_iter));
-	end*/
-	h := rand.Float64()
-	meanx := mean(x)
-	if h < 0.5 {
+func st2(x, popMean []float64, dim, it, maxIt int) {
+	p := rand.Float64()
+	alpha := rand.NormFloat64() / 2
+	if p <= 0.5 {
 		for i := 0; i < dim; i++ {
-			x[i] += alpha * (1 - float64(it)/float64(maxIt)) * (x[i] - meanx)
+			x[i] += alpha * math.Exp(1-float64(it)/float64(maxIt)) * (x[i] - popMean[i])
 		}
 	} else {
 		for i := 0; i < dim; i++ {
-			x[i] += alpha * (1 - float64(it)/float64(maxIt)) * math.Exp(float64(-i)/(rand.Float64()*float64(maxIt)))
+			x[i] += alpha * math.Exp(float64(-it)/(rand.Float64()*float64(maxIt))) * (x[i] - popMean[i])
 		}
 	}
 }
 
-// X_new(j, :) = X(j, :) + rand() * cos((pi *i )/ (2 * Max_iter)) * (GBestX - X(j, :)) - cos(sita) * (i / Max_iter) ^ (2 / Max_iter) * (X(j, :) - GBestX);
 func st3(x, gbest []float64, dim, it, maxIt int, sita float64) {
-	r := rand.Float64()
+	pow := math.Pow(1-(float64(it)/float64(maxIt)), 2/float64(maxIt))
 	for i := 0; i < dim; i++ {
-		x[i] += r*math.Cos(math.Pi*float64(it))/(2*float64(maxIt))*(gbest[i]-x[i]) -
-			math.Cos(sita)*math.Pow((float64(it)/float64(maxIt)), 2/float64(maxIt))*
-				x[i] - gbest[i]
+		r := rand.Float64()
+		x[i] += r*math.Cos(math.Pi*float64(it)/(2*float64(maxIt)))*(gbest[i]-x[i]) -
+			math.Cos(sita)*(x[i]-gbest[i])*pow
 	}
 }
 
-func NDKPSort(fits [][]float64, ZMin []float64) int {
-	NDFront := NDSort(fits)
-	zeroPosition := findPosition(NDFront, 0)
-	zeroFront := extractMatrix(fits, zeroPosition)
-	bestIndex, _ := bestIndex(zeroFront, ZMin)
-	return zeroPosition[bestIndex]
-}
-
-func mean[T int | float64](x []T) float64 {
-	var sum T = 0
-	for i := 0; i < len(x); i++ {
-		sum += x[i]
-	}
-	return float64(sum) / float64(len(x))
-}
-
-func findPosition(lhs []int, rhs int) []int {
-	positions := []int{}
-	for i := range lhs {
-		if lhs[i] == rhs {
-			positions = append(positions, i)
+func mean(pop Population) []float64 {
+	size := pop.Size()
+	dim := pop.VarianceDim()
+	out := make([]float64, dim)
+	for i := range size {
+		v := pop.At(i).Variance()
+		for j := range dim {
+			out[j] += v[j]
 		}
 	}
-	return positions
-}
 
-func extractMatrix(fits [][]float64, positions []int) [][]float64 {
-	out := [][]float64{}
-	for i := range positions {
-		out = append(out, fits[positions[i]])
+	for j := range dim {
+		out[j] /= float64(size)
 	}
+
 	return out
 }
