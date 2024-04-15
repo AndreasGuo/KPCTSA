@@ -16,17 +16,20 @@ func main() {
 	var config = DNAAlgorithm.DefaultConfig()
 	var dnaSet = RandomDNASet(config.DIM, config.DNASIZE)
 
-	// init objs
-	for i := range dnaSet {
-		fitFunc := DNAAlgorithm.FitnessCall(dnaSet, i, fitChan, config)
-		singleInvSlice := []algorithm.Individual{dnaSet[i]}
-		fits, _ := fitFunc(singleInvSlice)
-		dnaSet[i].SetObjs(fits[0])
-	}
-
 	result := ""
+	printDNASet(dnaSet, fitChan, result)
+
 	for it := 0; it < config.DNASETITERATION; it++ {
-		fmt.Println("DNASet iteration ", it+1, " ...")
+		fmt.Println("DNASet iteration ", it+1, "/", config.DNASETITERATION)
+
+		// init objs
+		for i := range dnaSet {
+			fitFunc := DNAAlgorithm.FitnessCall(dnaSet, i, fitChan, config)
+			singleInvSlice := []algorithm.Individual{dnaSet[i]}
+			fits, _ := fitFunc(singleInvSlice)
+			dnaSet[i].SetObjs(fits[0])
+		}
+
 		index := chooseInvToOpt(dnaSet)
 		fmt.Println("To Optimize: ", index)
 
@@ -43,50 +46,62 @@ func main() {
 		//}
 
 		fmt.Println("\rDone")
-		result = ""
-		for ind, inv := range dnaSet {
-			DNAString, err := inv.String()
-			if err != nil {
-				panic("error while decoding")
-			}
-			result += strconv.Itoa(ind) + " " + DNAString
-			//fmt.Print(DNAString, " ")
-			// continuity
-			fitChan.CtIn <- DNAAnalysis.SeqMapSingle{Index: ind, Seq: inv.Represent()}
-			result += " " + strconv.FormatFloat((<-fitChan.CtRe).Value, 'f', 4, 64)
-			//fmt.Print((<-fitChan.CtRe).Value, " ")
-			// hairpin
-			fitChan.HpIn <- DNAAnalysis.SeqMapSingle{Index: ind, Seq: inv.Represent()}
-			result += " " + strconv.FormatFloat((<-fitChan.HpRe).Value, 'f', 4, 64)
-			//fmt.Print((<-fitChan.HpRe).Value, " ")
-			// hm
-			hmList := make([]float64, len(dnaSet))
-			for j, o := range dnaSet {
-				fitChan.HmIn <- DNAAnalysis.SeqMapPair{Index1: ind, Index2: j, Seq1: inv.Represent(), Seq2: o.Represent()}
-				hmList[j] = (<-fitChan.HmRe).Value
-			}
-			//fmt.Print(sum(hmList), " ")
-			result += " " + strconv.FormatFloat(sum(hmList), 'f', 4, 64)
-			// sm
-			smList := make([]float64, len(dnaSet))
-			for j, o := range dnaSet {
-				if j != ind {
-					fitChan.SmIn <- DNAAnalysis.SeqMapPair{Index1: ind, Index2: j, Seq1: inv.Represent(), Seq2: o.Represent()}
-					smList[j] = (<-fitChan.SmRe).Value
-				}
-			}
-			//fmt.Print(sum(smList), " ")
-			result += " " + strconv.FormatFloat(sum(smList), 'f', 4, 64)
-			//mt
-			fitChan.MtIn <- DNAAnalysis.SeqMapSingle{Index: ind, Seq: inv.Represent()}
-			//fmt.Printf("%.4f\n", (<-fitChan.MtRe).Value)
-			result += " " + strconv.FormatFloat((<-fitChan.MtRe).Value, 'f', 4, 64) + "\n"
-		}
-		fmt.Println()
-		fmt.Println(result)
+		result = printDNASet(dnaSet, fitChan, result)
+
 	}
 	fileName := "result.txt"
 	os.WriteFile(fileName, []byte(result), 0644)
+}
+
+func printDNASet(dnaSet []algorithm.Individual, fitChan *DNAAnalysis.FitChan, result string) string {
+	result = ""
+	for ind, inv := range dnaSet {
+		DNAString, err := inv.String()
+		if err != nil {
+			panic("error while decoding")
+		}
+		result += strconv.Itoa(ind) + " " + DNAString
+		//fmt.Print(DNAString, " ")
+		// continuity
+		fitChan.CtIn <- DNAAnalysis.SeqMapSingle{Index: ind, Seq: inv.Represent()}
+		ct := (<-fitChan.CtRe).Value
+		result += " " + strconv.FormatFloat(ct, 'f', 4, 64)
+		//fmt.Print((<-fitChan.CtRe).Value, " ")
+		// hairpin
+		fitChan.HpIn <- DNAAnalysis.SeqMapSingle{Index: ind, Seq: inv.Represent()}
+		hp := (<-fitChan.HpRe).Value
+		result += " " + strconv.FormatFloat(hp, 'f', 4, 64)
+		//fmt.Print((<-fitChan.HpRe).Value, " ")
+		// hm
+		hmList := make([]float64, len(dnaSet))
+		for j, o := range dnaSet {
+			fitChan.HmIn <- DNAAnalysis.SeqMapPair{Index1: ind, Index2: j, Seq1: inv.Represent(), Seq2: o.Represent()}
+			hmList[j] = (<-fitChan.HmRe).Value
+		}
+		//fmt.Print(sum(hmList), " ")
+		hm := sum(hmList)
+		result += " " + strconv.FormatFloat(hm, 'f', 4, 64)
+		// sm
+		smList := make([]float64, len(dnaSet))
+		for j, o := range dnaSet {
+			if j != ind {
+				fitChan.SmIn <- DNAAnalysis.SeqMapPair{Index1: ind, Index2: j, Seq1: inv.Represent(), Seq2: o.Represent()}
+				smList[j] = (<-fitChan.SmRe).Value
+			}
+		}
+		//fmt.Print(sum(smList), " ")
+		sm := sum(smList)
+		result += " " + strconv.FormatFloat(sm, 'f', 4, 64)
+		//mt
+		fitChan.MtIn <- DNAAnalysis.SeqMapSingle{Index: ind, Seq: inv.Represent()}
+		//fmt.Printf("%.4f\n", (<-fitChan.MtRe).Value)
+		mt := (<-fitChan.MtRe).Value
+		result += " " + strconv.FormatFloat(mt, 'f', 4, 64) + "\n"
+		// dnaSet[ind].SetObjs([]float64{ct, hp, hm, sm, mt})
+	}
+	fmt.Println()
+	fmt.Println(result)
+	return result
 }
 
 func RandomDNASet(dim, size int) []algorithm.Individual {

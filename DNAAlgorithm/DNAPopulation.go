@@ -86,11 +86,9 @@ func (pop *DNAPopulation) Init() {
 }
 
 func (pop *DNAPopulation) Append(invs []algorithm.Individual) {
-	if invs != nil && len(invs) > 0 {
-		for i := range invs {
-			pop.individuals = append(pop.individuals, invs[i])
-			pop.size += 1
-		}
+	if len(invs) > 0 {
+		pop.individuals = append(pop.individuals, invs...)
+		pop.size = len(pop.individuals)
 	}
 }
 

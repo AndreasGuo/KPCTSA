@@ -35,6 +35,9 @@ func (po *PO) Iteration() Individual {
 		oldPop := po.Pop.Clone()
 		popMean := mean(po.Pop)
 		for i := 0; i < int(po.Pop.Size()); i++ {
+			if i == selectedIndex {
+				continue
+			}
 			st := rand.Intn(4)
 			x := po.Pop.At(i).Variance()
 			if islog {

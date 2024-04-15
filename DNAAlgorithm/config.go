@@ -12,6 +12,6 @@ type Config struct {
 }
 
 func DefaultConfig() *Config {
-	config := Config{20, 7, 10, 1000, 0, 3, 500, 2e-2}
+	config := Config{20, 7, 50, 1000, 0, 3, 200, 2e-2}
 	return &config
 }
