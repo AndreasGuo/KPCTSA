@@ -100,6 +100,10 @@ func (dnaAgent *DNAAgent) fixGCContent() {
 	GCPosition := []int{} //make([]int, len(agent.variance))
 	ATPosition := []int{} //make([]int, len(agent.variance))
 	for i, value := range dnaAgent.DNARowVariance {
+		if math.IsNaN(value) {
+			dnaAgent.DNARowVariance[i] = 3
+			value = 3
+		}
 		if value == DNAAnalysis.C || value == DNAAnalysis.G {
 			GCPosition = append(GCPosition, i)
 		} else {
