@@ -46,7 +46,7 @@ func FitnessCall(dnaSet []algorithm.Individual, index int, fitChan *DNAAnalysis.
 						fitChan.HmIn <- DNAAnalysis.SeqMapPair{Index1: i, Index2: j, Seq1: invs[i].Represent(), Seq2: invs[i].Represent()}
 					} else {
 						// 正常的算法
-						fitChan.HmIn <- DNAAnalysis.SeqMapPair{i, j, invs[i].Represent(), seqSet[j]}
+						fitChan.HmIn <- DNAAnalysis.SeqMapPair{Index1: i, Index2: j, Seq1: invs[i].Represent(), Seq2: seqSet[j]}
 						// 交换前后
 						// fitChan.HmIn <- DNAAnalysis.SeqMapPair{Index1: i, Index2: j, Seq1: seqSet[j], Seq2: invs[i].Represent()}
 					}
@@ -60,7 +60,7 @@ func FitnessCall(dnaSet []algorithm.Individual, index int, fitChan *DNAAnalysis.
 						continue
 					} else {
 						// 正常的算法
-						fitChan.SmIn <- DNAAnalysis.SeqMapPair{i, j, invs[i].Represent(), seqSet[j]}
+						fitChan.SmIn <- DNAAnalysis.SeqMapPair{Index1: i, Index2: j, Seq1: invs[i].Represent(), Seq2: seqSet[j]}
 						// 交换前后
 						//fitChan.SmIn <- DNAAnalysis.SeqMapPair{Index1: i, Index2: j, Seq1: seqSet[j], Seq2: invs[i].Represent()}
 					}
@@ -230,7 +230,7 @@ func avgTableRow[T int | float64](table [][]T) []float64 {
 }
 
 func norm(values []float64, minVal, maxVal float64, MINVALUE float64) {
-	for i, _ := range values {
+	for i := range values {
 		values[i] = (values[i] - minVal) / (maxVal - minVal)
 		values[i] = max(values[i], MINVALUE)
 	}

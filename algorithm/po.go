@@ -1,7 +1,6 @@
 package algorithm
 
 import (
-	"fmt"
 	"log"
 	"math"
 	"math/rand"
@@ -32,7 +31,7 @@ func (po *PO) Iteration() Individual {
 	sita := rand.Float64() * math.Pi
 
 	for it := 0; it < int(po.MaxIteration); it++ {
-		fmt.Print("\r", it)
+		// fmt.Print("\r", it)
 		oldPop := po.Pop.Clone()
 		popMean := mean(po.Pop)
 		for i := 0; i < int(po.Pop.Size()); i++ {

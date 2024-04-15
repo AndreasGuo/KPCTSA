@@ -49,20 +49,20 @@ func main() {
 			if err != nil {
 				panic("error while decoding")
 			}
-			result += DNAString
+			result += strconv.Itoa(ind) + " " + DNAString
 			//fmt.Print(DNAString, " ")
 			// continuity
-			fitChan.CtIn <- DNAAnalysis.SeqMapSingle{ind, inv.Represent()}
+			fitChan.CtIn <- DNAAnalysis.SeqMapSingle{Index: ind, Seq: inv.Represent()}
 			result += " " + strconv.FormatFloat((<-fitChan.CtRe).Value, 'f', 4, 64)
 			//fmt.Print((<-fitChan.CtRe).Value, " ")
 			// hairpin
-			fitChan.HpIn <- DNAAnalysis.SeqMapSingle{ind, inv.Represent()}
+			fitChan.HpIn <- DNAAnalysis.SeqMapSingle{Index: ind, Seq: inv.Represent()}
 			result += " " + strconv.FormatFloat((<-fitChan.HpRe).Value, 'f', 4, 64)
 			//fmt.Print((<-fitChan.HpRe).Value, " ")
 			// hm
 			hmList := make([]float64, len(dnaSet))
 			for j, o := range dnaSet {
-				fitChan.HmIn <- DNAAnalysis.SeqMapPair{ind, j, inv.Represent(), o.Represent()}
+				fitChan.HmIn <- DNAAnalysis.SeqMapPair{Index1: ind, Index2: j, Seq1: inv.Represent(), Seq2: o.Represent()}
 				hmList[j] = (<-fitChan.HmRe).Value
 			}
 			//fmt.Print(sum(hmList), " ")
@@ -71,14 +71,14 @@ func main() {
 			smList := make([]float64, len(dnaSet))
 			for j, o := range dnaSet {
 				if j != ind {
-					fitChan.SmIn <- DNAAnalysis.SeqMapPair{ind, j, inv.Represent(), o.Represent()}
+					fitChan.SmIn <- DNAAnalysis.SeqMapPair{Index1: ind, Index2: j, Seq1: inv.Represent(), Seq2: o.Represent()}
 					smList[j] = (<-fitChan.SmRe).Value
 				}
 			}
 			//fmt.Print(sum(smList), " ")
 			result += " " + strconv.FormatFloat(sum(smList), 'f', 4, 64)
 			//mt
-			fitChan.MtIn <- DNAAnalysis.SeqMapSingle{ind, inv.Represent()}
+			fitChan.MtIn <- DNAAnalysis.SeqMapSingle{Index: ind, Seq: inv.Represent()}
 			//fmt.Printf("%.4f\n", (<-fitChan.MtRe).Value)
 			result += " " + strconv.FormatFloat((<-fitChan.MtRe).Value, 'f', 4, 64) + "\n"
 		}
