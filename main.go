@@ -9,13 +9,18 @@ import (
 	"strconv"
 )
 
+var Zmin []float64
+
 func main() {
 	fitChan := DNAAnalysis.CreateWorker(100, 100, 10)
 	defer fitChan.Close()
 
 	var config = DNAAlgorithm.DefaultConfig()
 	var dnaSet = RandomDNASet(config.DIM, config.DNASIZE)
-
+	Zmin = make([]float64, 5)
+	for j := range Zmin {
+		Zmin[j] = 400
+	}
 	result := ""
 	printDNASet(dnaSet, fitChan, result)
 
@@ -124,23 +129,20 @@ func chooseInvToOpt(dnaSet []algorithm.Individual) (idx int) {
 	if len(dnaSet) == 0 {
 		panic("no inv")
 	}
-	ZMin := make([]float64, len(dnaSet[0].Objs()))
-	for j := range ZMin {
-		ZMin[j] = 400
-	}
+
 	for _, dna := range dnaSet {
 		objs := dna.Objs()
-		for i := range len(ZMin) {
-			ZMin[i] = min(ZMin[i], objs[i])
+		for i := range len(Zmin) {
+			Zmin[i] = min(Zmin[i], objs[i])
 		}
 	}
 	distance := make([]float64, len(dnaSet))
 	for i, dna := range dnaSet {
 		objs := dna.Objs()
 		distance[i] = 1
-		for j := range ZMin {
+		for j := range Zmin {
 			//distance[i] += math.Pow(objs[j]-ZMin[j], 2)
-			distance[i] *= max(1, objs[j]-ZMin[j])
+			distance[i] *= max(1, objs[j]-Zmin[j])
 		}
 	}
 
