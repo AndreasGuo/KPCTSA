@@ -62,7 +62,7 @@ func FitnessCall(dnaSet []algorithm.Individual, index int, fitChan *DNAAnalysis.
 						// 正常的算法
 						fitChan.SmIn <- DNAAnalysis.SeqMapPair{Index1: i, Index2: j, Seq1: invs[i].Represent(), Seq2: seqSet[j]}
 						// 交换前后
-						//fitChan.SmIn <- DNAAnalysis.SeqMapPair{Index1: i, Index2: j, Seq1: seqSet[j], Seq2: invs[i].Represent()}
+						// fitChan.SmIn <- DNAAnalysis.SeqMapPair{Index1: i, Index2: j, Seq1: seqSet[j], Seq2: invs[i].Represent()}
 					}
 				}
 			}
