@@ -2,6 +2,7 @@ package algorithm
 
 import (
 	"errors"
+
 	"gonum.org/v1/gonum/mat"
 )
 
@@ -99,10 +100,10 @@ func bestIndex(points [][]float64, ZMin []float64) (int, []float64, error) {
 	for i := range localPoints {
 		distance := float64(0)
 		for j := 0; j < m; j++ {
-			distance += intercept[j] * localPoints[i][j]
-			//if intercept[j] != 0 {
-			//	distance += localPoints[i][j] / intercept[j]
-			//}
+			//distance += intercept[j] * localPoints[i][j]
+			if intercept[j] != 0 {
+				distance += localPoints[i][j] / intercept[j]
+			}
 		}
 		distances[i] = distance
 		if index == 0 || distance < minDistance {
