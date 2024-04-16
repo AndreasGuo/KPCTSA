@@ -5,6 +5,7 @@ import (
 	"GoDNA/DNAAnalysis"
 	"GoDNA/algorithm"
 	"fmt"
+	"math"
 	"os"
 	"strconv"
 )
@@ -136,15 +137,18 @@ func chooseInvToOpt(dnaSet []algorithm.Individual) (idx int) {
 			Zmin[i] = min(Zmin[i], objs[i])
 		}
 	}
+	fmt.Println("Zmin: ", Zmin)
+
 	distance := make([]float64, len(dnaSet))
 	for i, dna := range dnaSet {
 		objs := dna.Objs()
 		distance[i] = 1
 		for j := range Zmin {
-			//distance[i] += math.Pow(objs[j]-ZMin[j], 2)
-			distance[i] *= max(1, objs[j]-Zmin[j])
+			distance[i] += math.Pow(objs[j]-Zmin[j], 2)
+			//distance[i] *= max(1, objs[j]-Zmin[j])
 		}
 	}
+	fmt.Println("distance: ", distance)
 
 	dix := 0.0
 	for i := range distance {
