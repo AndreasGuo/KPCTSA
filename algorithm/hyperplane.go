@@ -103,7 +103,6 @@ func bestIndex(points [][]float64, ZMin []float64) (int, []float64, error) {
 			//if intercept[j] != 0 {
 			//	distance += localPoints[i][j] / intercept[j]
 			//}
-
 		}
 		distances[i] = distance
 		if index == 0 || distance < minDistance {
