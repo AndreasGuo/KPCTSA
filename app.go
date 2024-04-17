@@ -151,7 +151,7 @@ func chooseInvToOpt(dnaSet []*DNAType.DNAAgent, minVal float64) (idx int) {
 		distance[i] = 1
 		for j := range zmin {
 			//distance[i] += math.Pow(objs[j]-zmin[j], 2)
-			distance[i] *= max(minVal, (objs[j]-zmin[j])/(zmax[j]-zmin[j]))
+			distance[i] *= max(1, (objs[j]-zmin[j])/(zmax[j]-zmin[j])*10)
 		}
 	}
 	fmt.Println("distance: ", distance)
