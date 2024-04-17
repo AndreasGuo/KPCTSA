@@ -1,7 +1,4 @@
 FROM golang
-COPY DNAAnalysis/* /opt/DNAAnalysis/
-COPY *.go /opt/
-COPY go.mod /opt/
-WORKDIR /opt/
+WORKDIR /app
 RUN go get
 ENTRYPOINT ["go", "run", "."]

@@ -41,7 +41,7 @@ func App(config Config) {
 		}
 
 		// choose a sequence in DNA set to optimize
-		index := chooseInvToOpt(dnaSet)
+		index := chooseInvToOpt(dnaSet, config.MINVALUE)
 		fmt.Println("To Optimize: ", index)
 
 		fitFunc := DNAType.FitnessCall(dnaSet, index, fitChan, config.MINVALUE)
@@ -129,15 +129,18 @@ func sum[T int | float64](lt []T) T {
 	return s
 }
 
-func chooseInvToOpt(dnaSet []*DNAType.DNAAgent) (idx int) {
+func chooseInvToOpt(dnaSet []*DNAType.DNAAgent, minVal float64) (idx int) {
 	if len(dnaSet) == 0 {
 		panic("no inv")
 	}
+
+	zmax := make([]float64, len(zmin))
 
 	for _, dna := range dnaSet {
 		objs := dna.Objs()
 		for i := range len(zmin) {
 			zmin[i] = min(zmin[i], objs[i])
+			zmax[i] = max(zmax[i], objs[i])
 		}
 	}
 	fmt.Println("zmin: ", zmin)
@@ -148,7 +151,7 @@ func chooseInvToOpt(dnaSet []*DNAType.DNAAgent) (idx int) {
 		distance[i] = 1
 		for j := range zmin {
 			//distance[i] += math.Pow(objs[j]-zmin[j], 2)
-			distance[i] *= max(1, objs[j]-zmin[j])
+			distance[i] *= max(minVal, (objs[j]-zmin[j])/(zmax[j]-zmin[j]))
 		}
 	}
 	fmt.Println("distance: ", distance)
