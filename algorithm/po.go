@@ -1,17 +1,18 @@
 package algorithm
 
 import (
+	DNAType "GoDNA/algorithm/dnatype"
 	"log"
 	"math"
 	"math/rand"
 )
 
 type PO struct {
-	Pop          Population
+	Pop          *DNAType.DNAPopulation
 	MaxIteration int
 }
 
-func (po *PO) Initialize(pop Population, inds ...Individual) {
+func (po *PO) Initialize(pop *DNAType.DNAPopulation, inds ...*DNAType.DNAAgent) {
 	pop.Init()
 	if inds != nil && len(inds) > 0 {
 		pop.Append(inds)
@@ -20,7 +21,7 @@ func (po *PO) Initialize(pop Population, inds ...Individual) {
 }
 
 // PO + NDSort + Knee Point
-func (po *PO) Iteration() Individual {
+func (po *PO) Iteration() *DNAType.DNAAgent {
 	logger := log.Default()
 	islog := false
 	fits := po.Pop.Fit()
@@ -154,7 +155,7 @@ func st3(x, gbest []float64, dim, it, maxIt int, sita float64) {
 	}
 }
 
-func mean(pop Population) []float64 {
+func mean(pop *DNAType.DNAPopulation) []float64 {
 	size := pop.Size()
 	dim := pop.VarianceDim()
 	out := make([]float64, dim)
