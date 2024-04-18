@@ -9,7 +9,7 @@ type DNASet []DNAAgent
 type FitFuncType func([]*DNAAgent) ([][]float64, []float64)
 
 // 注意fit所给mt已经是偏离度了
-func FitnessCall(dnaSet []*DNAAgent, index int, fitChan *FitChan, minVal float64) FitFuncType {
+func FitnessCall(dnaSet []*DNAAgent, index int, fitChan *FitChan, minVal float64, reversed bool) FitFuncType {
 	var minCt, minHp, minHm, minSm, minMT = 400.0, 400.0, 400.0, 400.0, 400.0
 	seqSet := make([]Seq, len(dnaSet))
 	for i := range dnaSet {
@@ -42,10 +42,13 @@ func FitnessCall(dnaSet []*DNAAgent, index int, fitChan *FitChan, minVal float64
 					if j == index {
 						fitChan.HmIn <- SeqMapPair{Index1: i, Index2: j, Seq1: invs[i].Represent(), Seq2: invs[i].Represent()}
 					} else {
-						// 正常的算法
-						fitChan.HmIn <- SeqMapPair{Index1: i, Index2: j, Seq1: invs[i].Represent(), Seq2: seqSet[j]}
-						// 交换前后
-						// fitChan.HmIn <- SeqMapPair{Index1: i, Index2: j, Seq1: seqSet[j], Seq2: invs[i].Represent()}
+						if !reversed {
+							// 正常的算法
+							fitChan.HmIn <- SeqMapPair{Index1: i, Index2: j, Seq1: invs[i].Represent(), Seq2: seqSet[j]}
+						} else {
+							// 交换前后
+							fitChan.HmIn <- SeqMapPair{Index1: i, Index2: j, Seq1: seqSet[j], Seq2: invs[i].Represent()}
+						}
 					}
 				}
 			}
@@ -56,10 +59,13 @@ func FitnessCall(dnaSet []*DNAAgent, index int, fitChan *FitChan, minVal float64
 					if j == index {
 						continue
 					} else {
-						// 正常的算法
-						fitChan.SmIn <- SeqMapPair{Index1: i, Index2: j, Seq1: invs[i].Represent(), Seq2: seqSet[j]}
-						// 交换前后
-						// fitChan.SmIn <- SeqMapPair{Index1: i, Index2: j, Seq1: seqSet[j], Seq2: invs[i].Represent()}
+						if !reversed {
+							// 正常的算法
+							fitChan.SmIn <- SeqMapPair{Index1: i, Index2: j, Seq1: invs[i].Represent(), Seq2: seqSet[j]}
+						} else {
+							// 交换前后
+							fitChan.SmIn <- SeqMapPair{Index1: i, Index2: j, Seq1: seqSet[j], Seq2: invs[i].Represent()}
+						}
 					}
 				}
 			}

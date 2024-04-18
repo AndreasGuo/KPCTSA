@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"time"
 )
 
 var zmin []float64
@@ -34,7 +35,7 @@ func App(config Config) {
 		// cause one sequence is changed
 		// the others must be recauculated
 		for i := range dnaSet {
-			fitFunc := DNAType.FitnessCall(dnaSet, i, fitChan, config.MINVALUE)
+			fitFunc := DNAType.FitnessCall(dnaSet, i, fitChan, config.MINVALUE, config.FITREVERSE)
 			singleInvSlice := []*DNAType.DNAAgent{dnaSet[i]}
 			fits, _ := fitFunc(singleInvSlice)
 			dnaSet[i].SetObjs(fits[0])
@@ -44,7 +45,7 @@ func App(config Config) {
 		index := chooseInvToOpt(dnaSet, config.MINVALUE)
 		fmt.Println("To Optimize: ", index)
 
-		fitFunc := DNAType.FitnessCall(dnaSet, index, fitChan, config.MINVALUE)
+		fitFunc := DNAType.FitnessCall(dnaSet, index, fitChan, config.MINVALUE, config.FITREVERSE)
 		alg := algorithm.PO{Pop: nil, MaxIteration: config.MAXIT}
 		pop := new(DNAType.DNAPopulation)
 		pop.SetConfig(config.POPSIZE, config.DIM, 5, float64(config.LB), float64(config.UB))
@@ -61,7 +62,9 @@ func App(config Config) {
 }
 
 func saveResult(result string) {
-	fileName := "result.txt"
+	now := time.Now()
+	str := now.Format("2006-01-02=15")
+	fileName := "result" + str + ".txt"
 	os.WriteFile(fileName, []byte(result), 0644)
 }
 
@@ -134,13 +137,13 @@ func chooseInvToOpt(dnaSet []*DNAType.DNAAgent, minVal float64) (idx int) {
 		panic("no inv")
 	}
 
-	zmax := make([]float64, len(zmin))
+	//zmax := make([]float64, len(zmin))
 
 	for _, dna := range dnaSet {
 		objs := dna.Objs()
 		for i := range len(zmin) {
 			zmin[i] = min(zmin[i], objs[i])
-			zmax[i] = max(zmax[i], objs[i])
+			//zmax[i] = max(zmax[i], objs[i])
 		}
 	}
 	fmt.Println("zmin: ", zmin)
@@ -151,10 +154,10 @@ func chooseInvToOpt(dnaSet []*DNAType.DNAAgent, minVal float64) (idx int) {
 		distance[i] = 1
 		for j := range zmin {
 			//distance[i] += math.Pow(objs[j]-zmin[j], 2)
-			if zmax[j] == zmin[j] {
-				continue
-			}
-			distance[i] *= max(0.1, (objs[j]-zmin[j])/(zmax[j]-zmin[j]))
+			// if zmax[j] == zmin[j] {
+			// 	continue
+			// }
+			distance[i] *= max(1, (objs[j] - zmin[j]))
 		}
 	}
 	fmt.Println("distance: ", distance)
