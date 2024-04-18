@@ -56,6 +56,11 @@ func App(config Config) {
 
 		result := printDNASet(dnaSet, fitChan)
 		if it == config.DNASETITERATION-1 {
+			result += "fit_reversed=" + strconv.FormatBool(config.FITREVERSE) + "\n"
+			result += "planenorm=" + strconv.FormatBool(config.PLANENORM) + "\n"
+			result += "DNA_set_iteration=" + strconv.Itoa(config.MAXIT) + "\n"
+			result += "pop_iteration=" + strconv.Itoa(config.MAXIT) + "\n"
+			result += "pop_size=" + strconv.Itoa(config.POPSIZE) + "\n"
 			saveResult(result)
 		}
 	}
@@ -63,7 +68,7 @@ func App(config Config) {
 
 func saveResult(result string) {
 	now := time.Now()
-	str := now.Format("2006-01-02=15")
+	str := now.Format("2006-01-02=15=04")
 	fileName := "result" + str + ".txt"
 	os.WriteFile(fileName, []byte(result), 0644)
 }
