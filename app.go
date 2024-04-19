@@ -69,7 +69,7 @@ func App(config Config) {
 func saveResult(result string) {
 	now := time.Now()
 	str := now.Format("2006-01-02=15=04")
-	fileName := "result" + str + ".txt"
+	fileName := "results/result" + str + ".txt"
 	os.WriteFile(fileName, []byte(result), 0644)
 }
 
