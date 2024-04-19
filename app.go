@@ -51,7 +51,7 @@ func App(config Config) {
 		pop.SetConfig(config.POPSIZE, config.DIM, 5, float64(config.LB), float64(config.UB))
 		pop.SetFitFunc(fitFunc)
 		alg.Initialize(pop, dnaSet[index])
-		inv := alg.Iteration()
+		inv := alg.Iteration(config.PLANENORM)
 		dnaSet[index] = inv
 
 		result := printDNASet(dnaSet, fitChan)

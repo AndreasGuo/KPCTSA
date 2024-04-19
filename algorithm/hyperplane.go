@@ -68,7 +68,7 @@ func asf(n, m int, localPoints [][]float64) []float64 {
 
 // points: indicators matrix
 // ZMin: global min value for each dimension
-func bestIndex(points [][]float64, ZMin []float64) (int, []float64, error) {
+func bestIndex(points [][]float64, ZMin []float64, norm bool) (int, []float64, error) {
 	n := len(points)
 	if n == 0 {
 		return 0, nil, errors.New("There is no points")
@@ -100,10 +100,14 @@ func bestIndex(points [][]float64, ZMin []float64) (int, []float64, error) {
 	for i := range localPoints {
 		distance := float64(0)
 		for j := 0; j < m; j++ {
-			//distance += intercept[j] * localPoints[i][j]
-			if intercept[j] != 0 {
-				distance += localPoints[i][j] / intercept[j]
+			if norm {
+				if intercept[j] != 0 {
+					distance += localPoints[i][j] / intercept[j]
+				}
+			} else {
+				distance += intercept[j] * localPoints[i][j]
 			}
+
 		}
 		distances[i] = distance
 		if index == 0 || distance < minDistance {

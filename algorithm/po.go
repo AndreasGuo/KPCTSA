@@ -14,19 +14,19 @@ type PO struct {
 
 func (po *PO) Initialize(pop *DNAType.DNAPopulation, inds ...*DNAType.DNAAgent) {
 	pop.Init()
-	if inds != nil && len(inds) > 0 {
+	if len(inds) > 0 {
 		pop.Append(inds)
 	}
 	po.Pop = pop
 }
 
 // PO + NDSort + Knee Point
-func (po *PO) Iteration() *DNAType.DNAAgent {
+func (po *PO) Iteration(hyperPlaneNorm bool) *DNAType.DNAAgent {
 	logger := log.Default()
 	islog := false
 	fits := po.Pop.Fit()
 	ZMin := po.Pop.ZMin()
-	selectedIndex, _ := NDKPSort(fits, ZMin, po.Pop.Size())
+	selectedIndex, _ := NDKPSort(fits, ZMin, po.Pop.Size(), hyperPlaneNorm)
 
 	gbest := po.Pop.At(selectedIndex).Variance()
 	sita := rand.Float64() * math.Pi
@@ -82,7 +82,7 @@ func (po *PO) Iteration() *DNAType.DNAAgent {
 
 		fits = po.Pop.Fit()
 		ZMin = po.Pop.ZMin()
-		bestIdx, selectedIndex := NDKPSort(fits, ZMin, po.Pop.Size()/2)
+		bestIdx, selectedIndex := NDKPSort(fits, ZMin, po.Pop.Size()/2, hyperPlaneNorm)
 		gbest = po.Pop.At(bestIdx).Variance()
 		po.Pop.Select(selectedIndex)
 

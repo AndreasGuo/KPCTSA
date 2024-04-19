@@ -1,8 +1,9 @@
 package algorithm
 
 import (
-	"github.com/mkmik/argsort"
 	"slices"
+
+	"github.com/mkmik/argsort"
 )
 
 // NDSort
@@ -85,7 +86,7 @@ func extractMatrix(fits [][]float64, positions []int) [][]float64 {
 }
 
 // returns the best and all selected (index)
-func NDKPSort(fits [][]float64, ZMin []float64, size int) (int, []int) {
+func NDKPSort(fits [][]float64, ZMin []float64, size int, norm bool) (int, []int) {
 	NDFront := NDSort(fits)
 	maxFront := slices.Max(NDFront) + 1
 	var zeroPosition []int
@@ -105,7 +106,7 @@ func NDKPSort(fits [][]float64, ZMin []float64, size int) (int, []int) {
 			maxSelectedFront = f
 			break
 		} else {
-			lastFrontSelected := selectFromLastFront(fits, front, ZMin, size-len(selectedPosition))
+			lastFrontSelected := selectFromLastFront(fits, front, ZMin, size-len(selectedPosition), norm)
 			selectedPosition = append(selectedPosition, lastFrontSelected...)
 			maxSelectedFront = f
 		}
@@ -120,17 +121,17 @@ func NDKPSort(fits [][]float64, ZMin []float64, size int) (int, []int) {
 	}
 
 	zeroFront := extractMatrix(fits, zeroPosition)
-	bestIndex, _, _ := bestIndex(zeroFront, ZMin)
+	bestIndex, _, _ := bestIndex(zeroFront, ZMin, norm)
 	return zeroPosition[bestIndex], selectedPosition
 }
 
-func selectFromLastFront(fits [][]float64, front []int, ZMin []float64, remainSize int) []int {
+func selectFromLastFront(fits [][]float64, front []int, ZMin []float64, remainSize int, norm bool) []int {
 	frontFits := make([][]float64, len(front))
 	for i := range front {
 		frontFits[i] = make([]float64, len(fits[0]))
 		copy(frontFits[i], fits[front[i]])
 	}
-	_, distances, _ := bestIndex(frontFits, ZMin)
+	_, distances, _ := bestIndex(frontFits, ZMin, norm)
 	indicies := argsort.SortSlice(distances, func(i, j int) bool {
 		return distances[i] < distances[j]
 	})
