@@ -21,7 +21,7 @@ func (po *PO) Initialize(pop *DNAType.DNAPopulation, inds ...*DNAType.DNAAgent) 
 }
 
 // PO + NDSort + Knee Point
-func (po *PO) Iteration(hyperPlaneNorm bool) *DNAType.DNAAgent {
+func (po *PO) Iteration(hyperPlaneNorm bool, origin bool) *DNAType.DNAAgent {
 	logger := log.Default()
 	islog := false
 	fits := po.Pop.Fit()
@@ -48,13 +48,30 @@ func (po *PO) Iteration(hyperPlaneNorm bool) *DNAType.DNAAgent {
 
 			switch st {
 			case 0:
-				st0(x, gbest, popMean, po.Pop.VarianceDim(), it, po.MaxIteration)
+				if origin {
+					ost0(x, gbest, popMean, po.Pop.VarianceDim(), it, po.MaxIteration)
+				} else {
+					st0(x, gbest, popMean, po.Pop.VarianceDim(), it, po.MaxIteration)
+				}
+
 			case 1:
-				st1(x, gbest, po.Pop.VarianceDim(), it, po.MaxIteration)
+				if origin {
+					ost1(x, gbest, po.Pop.VarianceDim(), it, po.MaxIteration)
+				} else {
+					st1(x, gbest, po.Pop.VarianceDim(), it, po.MaxIteration)
+				}
 			case 2:
-				st2(x, popMean, po.Pop.VarianceDim(), it, po.MaxIteration)
+				if origin {
+					ost2(x, popMean, po.Pop.VarianceDim(), it, po.MaxIteration)
+				} else {
+					st2(x, popMean, po.Pop.VarianceDim(), it, po.MaxIteration)
+				}
 			case 3:
-				st3(x, gbest, po.Pop.VarianceDim(), it, po.MaxIteration, sita)
+				if origin {
+					ost3(x, gbest, po.Pop.VarianceDim(), it, po.MaxIteration, sita)
+				} else {
+					st3(x, gbest, po.Pop.VarianceDim(), it, po.MaxIteration, sita)
+				}
 			}
 			out := make([]int, len(x))
 			for k := range x {
@@ -113,6 +130,15 @@ func levy(lh int) []float64 {
 	return u
 }
 
+func ost0(x, gbest, popMean []float64, dim, it, maxIt int) {
+	levyDim := levy(dim)
+	for i := 0; i < dim; i++ {
+		r := rand.Float64()
+		x[i] = (x[i] - gbest[i]) * levyDim[i] * r
+		x[i] += (1 - r) * popMean[i] * math.Pow(1-float64(it)/float64(maxIt), 2*float64(it)/float64(maxIt))
+	}
+}
+
 func st0(x, gbest, popMean []float64, dim, it, maxIt int) {
 	levyDim := levy(dim)
 	p1 := float64(4)
@@ -123,12 +149,34 @@ func st0(x, gbest, popMean []float64, dim, it, maxIt int) {
 	}
 }
 
+func ost1(x, gbest []float64, dim, it, maxIt int) {
+	levyDim := levy(dim)
+	for i := 0; i < dim; i++ {
+		r := rand.NormFloat64()
+		x[i] += gbest[i]*levyDim[i] + r
+	}
+}
+
 func st1(x, gbest []float64, dim, it, maxIt int) {
 	levyDim := levy(dim)
 	p2 := float64(2)
 	for i := 0; i < dim; i++ {
 		r := rand.NormFloat64()
 		x[i] += gbest[i]*levyDim[i]/p2 + r*(1-float64(it)/float64(maxIt))
+	}
+}
+
+func ost2(x, popMean []float64, dim, it, maxIt int) {
+	p := rand.Float64()
+	alpha := rand.NormFloat64() / 5
+	if p <= 0.5 {
+		for i := 0; i < dim; i++ {
+			x[i] += alpha * (1 - float64(it)/float64(maxIt)) * (x[i] - popMean[i])
+		}
+	} else {
+		for i := 0; i < dim; i++ {
+			x[i] += alpha * math.Exp(float64(-it)/(rand.Float64()*float64(maxIt)))
+		}
 	}
 }
 
@@ -143,6 +191,15 @@ func st2(x, popMean []float64, dim, it, maxIt int) {
 		for i := 0; i < dim; i++ {
 			x[i] += alpha * math.Exp(float64(-it)/(rand.Float64()*float64(maxIt))) * (x[i] - popMean[i])
 		}
+	}
+}
+
+func ost3(x, gbest []float64, dim, it, maxIt int, sita float64) {
+	pow := math.Pow(float64(it)/float64(maxIt), 2/float64(maxIt))
+	for i := 0; i < dim; i++ {
+		r := rand.Float64()
+		x[i] += r*math.Cos(math.Pi*float64(it)/(2*float64(maxIt)))*(gbest[i]-x[i]) -
+			math.Cos(sita)*(x[i]-gbest[i])*pow
 	}
 }
 

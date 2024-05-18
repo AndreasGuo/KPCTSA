@@ -12,6 +12,7 @@ type Config struct {
 	FITREVERSE      bool
 	PLANENORM       bool
 	CHOOSETOOPT     int
+	ORIGINPO        bool
 }
 
 // func DefaultConfig() *Config {

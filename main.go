@@ -15,7 +15,7 @@ func main() {
 	var fitReverse = flag.Bool("fitrev", false, "is reversed src and dst in calculating hm and sm")
 	var planeNorm = flag.Bool("norm", false, "normalize objs before calculate distance between individuals and hyperplane")
 	var chooseToOpt = flag.Int("worstdef", 0, "the method to choose worst sequence in DNA set, 0-product; 1-elucid distance")
-
+	var originPO = flag.Bool("originpo", false, "if use origin po")
 	flag.Parse()
 
 	// boundary of problem
@@ -36,6 +36,7 @@ func main() {
 		FITREVERSE:      *fitReverse,
 		PLANENORM:       *planeNorm,
 		CHOOSETOOPT:     *chooseToOpt,
+		ORIGINPO:        *originPO,
 	}
 
 	App(config)

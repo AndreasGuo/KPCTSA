@@ -12,6 +12,7 @@ import (
 var zmin []float64
 
 func App(config Config) {
+	startTime := time.Now()
 
 	// create working pool
 	fitChan := DNAType.CreateWorker(100, 100, 10)
@@ -51,16 +52,19 @@ func App(config Config) {
 		pop.SetConfig(config.POPSIZE, config.DIM, 5, float64(config.LB), float64(config.UB))
 		pop.SetFitFunc(fitFunc)
 		alg.Initialize(pop, dnaSet[index])
-		inv := alg.Iteration(config.PLANENORM)
+		inv := alg.Iteration(config.PLANENORM, config.ORIGINPO)
 		dnaSet[index] = inv
 
 		result := printDNASet(dnaSet, fitChan)
 		if it == config.DNASETITERATION-1 {
+			endTime := time.Now()
+			runningDuration := endTime.Sub(startTime).Seconds()
 			result += "fit_reversed=" + strconv.FormatBool(config.FITREVERSE) + "\n"
 			result += "planenorm=" + strconv.FormatBool(config.PLANENORM) + "\n"
 			result += "DNA_set_iteration=" + strconv.Itoa(config.MAXIT) + "\n"
 			result += "pop_iteration=" + strconv.Itoa(config.MAXIT) + "\n"
 			result += "pop_size=" + strconv.Itoa(config.POPSIZE) + "\n"
+			result += "running time (s)=" + strconv.FormatFloat(runningDuration, 'f', 4, 64)
 			saveResult(result)
 		}
 	}
