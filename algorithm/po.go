@@ -185,7 +185,7 @@ func st2(x, popMean []float64, dim, it, maxIt int) {
 	alpha := rand.NormFloat64() / 2
 	if p <= 0.5 {
 		for i := 0; i < dim; i++ {
-			x[i] += alpha * math.Exp(1-float64(it)/float64(maxIt)) * (x[i] - popMean[i])
+			x[i] += alpha * (1-float64(it)/float64(maxIt)) * (x[i] - popMean[i])
 		}
 	} else {
 		for i := 0; i < dim; i++ {

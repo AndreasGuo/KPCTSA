@@ -8,9 +8,9 @@ func main() {
 	// flags
 	var dnaLength = flag.Int("vdim", 20, "length of sigle DNA sequence")
 	var dnaSetSize = flag.Int("setsize", 7, "size of DNA set")
-	var popSize = flag.Int("popsize", 50, "size of population")
-	var maxIt = flag.Int("maxit", 200, "max iteration each algorithm run")
-	var dnaSetIteration = flag.Int("optit", 1000, "number of optimize iterations")
+	var popSize = flag.Int("popsize", 20, "size of population")
+	var maxIt = flag.Int("maxit", 50, "max iteration each algorithm run")
+	var dnaSetIteration = flag.Int("optit", 200, "number of optimize iterations")
 	var minVal = flag.Float64("minval", 2e-2, "min value when calculate product items which need avoid zero")
 	var fitReverse = flag.Bool("fitrev", false, "is reversed src and dst in calculating hm and sm")
 	var planeNorm = flag.Bool("norm", false, "normalize objs before calculate distance between individuals and hyperplane")
