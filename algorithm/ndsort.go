@@ -1,10 +1,13 @@
 package algorithm
 
 import (
+	"errors"
 	"slices"
 
 	"github.com/mkmik/argsort"
 )
+
+const inf float64 = 0xfff
 
 // NDSort
 // Efficient non-dominated sort with sequential search (ENS-SS)
@@ -150,4 +153,60 @@ func findPosition(lhs []int, rhs int) []int {
 		}
 	}
 	return positions
+}
+
+func normObjs(fits [][]float64) [][]float64 {
+	n := len(fits)
+	normedFits := make([][]float64, n)
+	if n == 0 {
+		return normedFits
+	}
+	m := len(fits[0])
+	for i := range n {
+		normedFits[i] = make([]float64, m)
+		interval := max(slices.Max(fits[i])-slices.Min(fits[i]), 1e-2)
+		for j := range m {
+			normedFits[i][j] = fits[i][j] / interval
+		}
+	}
+
+	return normedFits
+}
+
+func crowdingDistance(normedFits [][]float64) ([]float64, error) {
+	// each column
+	n := len(normedFits)
+	if n == 0 {
+		return nil, errors.New("no fits values")
+	}
+	m := len(normedFits[0])
+	cd := make([]float64, n)
+	for j := range m {
+		obj_m := make([]float64, 0, n)
+		for i := range n {
+			obj_m = append(obj_m, normedFits[i][j])
+		}
+		indicies := argsort.SortSlice(obj_m, func(i, j int) bool {
+			return obj_m[i] < obj_m[j]
+		})
+		interval := max(slices.Max(obj_m)-slices.Min(obj_m), 1)
+		for i := range n {
+			if indicies[i] == 0 || indicies[i] == n-1 {
+				cd[i] += inf
+			} else {
+				cd[i] += (obj_m[indicies[i-1]] - obj_m[indicies[i+1]]) / interval
+			}
+		}
+	}
+	return cd, nil
+}
+
+func maxCrowdingDistanceIndex(crowdingDistance []float64) (index int) {
+	index = 0
+	for i := range len(crowdingDistance) {
+		if crowdingDistance[i] > crowdingDistance[index] {
+			index = i
+		}
+	}
+	return
 }
