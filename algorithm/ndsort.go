@@ -89,7 +89,7 @@ func extractMatrix(fits [][]float64, positions []int) [][]float64 {
 }
 
 // returns the best and all selected (index)
-func NDKPSort(fits [][]float64, ZMin []float64, size int, norm bool) (int, []int) {
+func NDKPSort(fits [][]float64, ZMin []float64, size int, norm bool, cd bool) (int, []int) {
 	NDFront := NDSort(fits)
 	maxFront := slices.Max(NDFront) + 1
 	var zeroPosition []int
@@ -124,8 +124,16 @@ func NDKPSort(fits [][]float64, ZMin []float64, size int, norm bool) (int, []int
 	}
 
 	zeroFront := extractMatrix(fits, zeroPosition)
-	bestIndex, _, _ := bestIndex(zeroFront, ZMin, norm)
-	return zeroPosition[bestIndex], selectedPosition
+	var bI int
+	if !cd {
+		bI, _, _ = bestIndex(zeroFront, ZMin, norm)
+	} else {
+		normedObjs := normObjs(zeroFront)
+		cds, _ := crowdingDistance(normedObjs)
+		bI = maxCrowdingDistanceIndex(cds)
+	}
+
+	return zeroPosition[bI], selectedPosition
 }
 
 func selectFromLastFront(fits [][]float64, front []int, ZMin []float64, remainSize int, norm bool) []int {
@@ -204,6 +212,9 @@ func crowdingDistance(normedFits [][]float64) ([]float64, error) {
 func maxCrowdingDistanceIndex(crowdingDistance []float64) (index int) {
 	index = 0
 	for i := range len(crowdingDistance) {
+		if crowdingDistance[index] > inf {
+			break
+		}
 		if crowdingDistance[i] > crowdingDistance[index] {
 			index = i
 		}

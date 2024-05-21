@@ -13,6 +13,7 @@ type Config struct {
 	PLANENORM       bool
 	CHOOSETOOPT     int
 	ORIGINPO        bool
+	CD              bool
 }
 
 // func DefaultConfig() *Config {

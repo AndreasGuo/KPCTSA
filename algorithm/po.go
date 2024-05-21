@@ -21,12 +21,12 @@ func (po *PO) Initialize(pop *DNAType.DNAPopulation, inds ...*DNAType.DNAAgent) 
 }
 
 // PO + NDSort + Knee Point
-func (po *PO) Iteration(hyperPlaneNorm bool, origin bool) *DNAType.DNAAgent {
+func (po *PO) Iteration(hyperPlaneNorm bool, origin bool, cd bool) *DNAType.DNAAgent {
 	logger := log.Default()
 	islog := false
 	fits := po.Pop.Fit()
 	ZMin := po.Pop.ZMin()
-	selectedIndex, _ := NDKPSort(fits, ZMin, po.Pop.Size(), hyperPlaneNorm)
+	selectedIndex, _ := NDKPSort(fits, ZMin, po.Pop.Size(), hyperPlaneNorm, cd)
 
 	gbest := po.Pop.At(selectedIndex).Variance()
 	sita := rand.Float64() * math.Pi
@@ -99,7 +99,7 @@ func (po *PO) Iteration(hyperPlaneNorm bool, origin bool) *DNAType.DNAAgent {
 
 		fits = po.Pop.Fit()
 		ZMin = po.Pop.ZMin()
-		bestIdx, selectedIndex := NDKPSort(fits, ZMin, po.Pop.Size()/2, hyperPlaneNorm)
+		bestIdx, selectedIndex := NDKPSort(fits, ZMin, po.Pop.Size()/2, hyperPlaneNorm, cd)
 		gbest = po.Pop.At(bestIdx).Variance()
 		po.Pop.Select(selectedIndex)
 
@@ -185,7 +185,7 @@ func st2(x, popMean []float64, dim, it, maxIt int) {
 	alpha := rand.NormFloat64() / 2
 	if p <= 0.5 {
 		for i := 0; i < dim; i++ {
-			x[i] += alpha * (1-float64(it)/float64(maxIt)) * (x[i] - popMean[i])
+			x[i] += alpha * (1 - float64(it)/float64(maxIt)) * (x[i] - popMean[i])
 		}
 	} else {
 		for i := 0; i < dim; i++ {
