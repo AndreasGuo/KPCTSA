@@ -202,7 +202,7 @@ func crowdingDistance(normedFits [][]float64) ([]float64, error) {
 			if indicies[i] == 0 || indicies[i] == n-1 {
 				cd[i] += inf
 			} else {
-				cd[i] += (obj_m[indicies[i-1]] - obj_m[indicies[i+1]]) / interval
+				cd[i] += (obj_m[indicies[i]-1] - obj_m[indicies[i]+1]) / interval
 			}
 		}
 	}
