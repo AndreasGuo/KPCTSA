@@ -64,7 +64,8 @@ func App(config Config) {
 			result += "DNA_set_iteration=" + strconv.Itoa(config.MAXIT) + "\n"
 			result += "pop_iteration=" + strconv.Itoa(config.MAXIT) + "\n"
 			result += "pop_size=" + strconv.Itoa(config.POPSIZE) + "\n"
-			result += "crowding_dis=" + strconv.FormatBool(config.CD)
+			result += "crowding_dis=" + strconv.FormatBool(config.CD) + "\n"
+			result += "original PO =" + strconv.FormatBool(config.ORIGINPO) + "\n"
 			result += "running time (s)=" + strconv.FormatFloat(runningDuration, 'f', 4, 64)
 			saveResult(result)
 		}
