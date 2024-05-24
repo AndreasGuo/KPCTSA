@@ -25,3 +25,5 @@ Other parameters may useful for comparison
 
 Notice the parameter `worstdef` has no real affect, 
 code of elucid distance is removed cause it's too bad.
+
+Please DO NOT use docker cause the docker file are not working yet.
