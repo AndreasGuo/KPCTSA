@@ -77,7 +77,7 @@ func saveResult(result string) {
 	now := time.Now()
 	str := now.Format("2006-01-02=15=04")
 	resultsDir := "results"
-	if _, ok := os.Stat(resultsDir); os.IsExist(ok) {
+	if _, ok := os.Stat(resultsDir); os.IsNotExist(ok) {
 		err := os.Mkdir(resultsDir, os.ModePerm)
 		if err != nil {
 			fmt.Println("error on creating resutls dir: ", err)
