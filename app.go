@@ -5,6 +5,7 @@ import (
 	DNAType "GoDNA/algorithm/dnatype"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strconv"
 	"time"
 )
@@ -75,8 +76,20 @@ func App(config Config) {
 func saveResult(result string) {
 	now := time.Now()
 	str := now.Format("2006-01-02=15=04")
-	fileName := "results/result" + str + ".txt"
-	os.WriteFile(fileName, []byte(result), 0644)
+	resultsDir := "results"
+	if _, ok := os.Stat(resultsDir); os.IsExist(ok) {
+		err := os.Mkdir(resultsDir, os.ModePerm)
+		if err != nil {
+			fmt.Println("error on creating resutls dir: ", err)
+			return
+		}
+	}
+	fileName := filepath.Join(resultsDir, str+".txt")
+	err := os.WriteFile(fileName, []byte(result), 0644)
+	if err != nil {
+		fmt.Println("error on writing result: ", err)
+		fmt.Println("result is:", result)
+	}
 }
 
 func printDNASet(dnaSet []*DNAType.DNAAgent, fitChan *DNAType.FitChan) string {
