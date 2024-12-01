@@ -115,18 +115,14 @@ func levy(lh int) []float64 {
 	sigma /= math.Gamma(1+beta/2) * beta * math.Pow(1, (beta-1)/2)
 	sigma = math.Pow(sigma, 1/beta)
 	u := make([]float64, lh)
-	maxLevy := 0.0
 	for i := range u {
-		u[i] = rand.NormFloat64() / math.Pow(math.Abs(rand.NormFloat64()), 1/beta)
-		if math.Abs(u[i]) > maxLevy {
-			maxLevy = math.Abs(u[i])
-		}
+		u[i] = sigma * rand.NormFloat64() / math.Pow(math.Abs(rand.NormFloat64()), 1/beta)
 	}
 
-	for i := range u {
-		u[i] /= 1.1
-		//u[i] *= 1.2
-	}
+	//for i := range u {
+	//	u[i] /= 1.1
+	//	//u[i] *= 1.2
+	//}
 	return u
 }
 
