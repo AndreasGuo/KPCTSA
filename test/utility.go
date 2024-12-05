@@ -110,7 +110,7 @@ func sum[T int | float64](lt []T) T {
 	return s
 }
 
-func writeCSV(data [][]float64, behavior string, it int, origin bool) {
+func writeCSV(data [][]float64, behavior string, it int, origin bool, bestIdx int) {
 	isOrigin := "origin"
 	if !origin {
 		isOrigin = "adjust"
@@ -123,10 +123,16 @@ func writeCSV(data [][]float64, behavior string, it int, origin bool) {
 	defer file.Close()
 	writer := csv.NewWriter(file)
 	defer writer.Flush()
-	for _, value := range data {
+	writer.Write([]string{"Continuity", "Hairpin", "HMeasure", "Similarity", "VMT", "Best"})
+	for idx, value := range data {
 		v := []string{}
 		for _, iv := range value {
 			v = append(v, strconv.FormatFloat(float64(iv), 'f', 2, 64))
+		}
+		if idx == bestIdx {
+			v = append(v, "true")
+		} else {
+			v = append(v, "false")
 		}
 		writer.Write(v)
 	}

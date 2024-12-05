@@ -69,7 +69,7 @@ func (po *PO) IterationForaging(hyperPlaneNorm bool, origin bool, cd bool) *DNAT
 		gbest = po.Pop.At(bestIdx).Variance()
 		po.Pop.Select(selectedIndex)
 		if it%50 == 0 || it == po.MaxIteration-1 {
-			writeCSV(fits, "foraging", it, origin)
+			writeCSV(fits, "foraging", it, origin, bestIdx)
 		}
 	}
 
@@ -122,6 +122,37 @@ func TestPOSt0(T *testing.T) {
 	pop.SetFitFunc(fitFunc)
 	alg.Initialize(pop, dnaSet[index])
 	inv := alg.IterationForaging(false, true, false)
+	PrintDNASet(dnaSet, fitChan)
+	dnaSet[index] = inv
+}
+
+func TestPOASt0(T *testing.T) {
+	fitChan := DNAType.CreateWorker(100, 100, 10)
+	defer fitChan.Close()
+
+	// init dna set
+	var dnaSet = baseDNAs()
+	var zmin = make([]float64, 5)
+	for j := range zmin {
+		zmin[j] = 400
+	}
+
+	for i := range dnaSet {
+		fitFunc := DNAType.FitnessCall(dnaSet, i, fitChan, 2e-2, true)
+		singleInvSlice := []*DNAType.DNAAgent{dnaSet[i]}
+		fits, _ := fitFunc(singleInvSlice)
+		dnaSet[i].SetObjs(fits[0])
+	}
+
+	index := 2
+	//fmt.Println("To Optimize: ", index)
+	fitFunc := DNAType.FitnessCall(dnaSet, index, fitChan, 2e-2, true)
+	alg := PO{Pop: nil, MaxIteration: 200}
+	pop := new(DNAType.DNAPopulation)
+	pop.SetConfig(200, 20, 4, 0, 3)
+	pop.SetFitFunc(fitFunc)
+	alg.Initialize(pop, dnaSet[index])
+	inv := alg.IterationForaging(false, false, false)
 	PrintDNASet(dnaSet, fitChan)
 	dnaSet[index] = inv
 }
