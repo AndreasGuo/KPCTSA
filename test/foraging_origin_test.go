@@ -18,7 +18,7 @@ func (po *PO) IterationForaging(hyperPlaneNorm bool, origin bool, cd bool) *DNAT
 	selectedIndex, _ := algorithm.NDKPSort(fits, ZMin, po.Pop.Size(), hyperPlaneNorm, cd)
 
 	gbest := po.Pop.At(selectedIndex).Variance()
-
+	writeCSV(fits, "foraging", -1, origin, selectedIndex)
 	for it := 0; it < int(po.MaxIteration); it++ {
 		oldPop := po.Pop.Clone()
 		popMean := Mean(po.Pop)
@@ -69,30 +69,15 @@ func (po *PO) IterationForaging(hyperPlaneNorm bool, origin bool, cd bool) *DNAT
 		gbest = po.Pop.At(bestIdx).Variance()
 		po.Pop.Select(selectedIndex)
 		if it%50 == 0 || it == po.MaxIteration-1 {
-			writeCSV(fits, "foraging", it, origin, bestIdx)
+			csvFits := [][]float64{}
+			for _, idx := range selectedIndex {
+				csvFits = append(csvFits, fits[idx])
+			}
+			writeCSV(csvFits, "foraging", it, origin, bestIdx)
 		}
 	}
 
 	return po.Pop.At(selectedIndex)
-}
-
-func ost0(x, gbest, popMean []float64, dim, it, maxIt int) {
-	levyDim := Levy(dim)
-	for i := 0; i < dim; i++ {
-		r := rand.Float64()
-		x[i] = (x[i] - gbest[i]) * levyDim[i] * r
-		x[i] += (1 - r) * popMean[i] * math.Pow(1-float64(it)/float64(maxIt), 2*float64(it)/float64(maxIt))
-	}
-}
-
-func st0(x, gbest, popMean []float64, dim, it, maxIt int) {
-	levyDim := Levy(dim)
-	p1 := float64(4)
-	for i := 0; i < dim; i++ {
-		r := rand.Float64()
-		x[i] += (x[i] - gbest[i]) * levyDim[i] * r / p1
-		x[i] += (1 - r) * popMean[i] * math.Pow(1-float64(it)/float64(maxIt), 2*float64(it)/float64(maxIt)) / p1
-	}
 }
 
 func TestPOSt0(T *testing.T) {

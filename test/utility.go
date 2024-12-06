@@ -116,6 +116,7 @@ func writeCSV(data [][]float64, behavior string, it int, origin bool, bestIdx in
 		isOrigin = "adjust"
 	}
 	filename := fmt.Sprintf("obj-%s-%d-%s.csv", behavior, it+1, isOrigin)
+	os.Remove(filename)
 	file, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE, 0666)
 	if err != nil {
 		log.Fatal(err)
@@ -135,6 +136,7 @@ func writeCSV(data [][]float64, behavior string, it int, origin bool, bestIdx in
 			v = append(v, "false")
 		}
 		writer.Write(v)
+		//fmt.Println(strconv.Itoa(it+1) + " " + strconv.Itoa(idx) + " " + strings.Join(v, ","))
 	}
 }
 
@@ -172,4 +174,51 @@ func baseDNAs() []*DNAType.DNAAgent {
 	dnas = append(dnas, agent3)
 
 	return dnas
+}
+
+func ost0(x, gbest, popMean []float64, dim, it, maxIt int) {
+	levyDim := Levy(dim)
+	for i := 0; i < dim; i++ {
+		r := rand.Float64()
+		x[i] = (x[i] - gbest[i]) * levyDim[i] * r
+		x[i] += (1 - r) * popMean[i] * math.Pow(1-float64(it)/float64(maxIt), 2*float64(it)/float64(maxIt))
+	}
+}
+
+func st0(x, gbest, popMean []float64, dim, it, maxIt int) {
+	levyDim := Levy(dim)
+	p1 := float64(4)
+	for i := 0; i < dim; i++ {
+		r := rand.Float64()
+		x[i] += (x[i] - gbest[i]) * levyDim[i] * r / p1
+		x[i] += (1 - r) * popMean[i] * math.Pow(1-float64(it)/float64(maxIt), 2*float64(it)/float64(maxIt)) / p1
+	}
+}
+
+func ost2(x, popMean []float64, dim, it, maxIt int) {
+	p := rand.Float64()
+	alpha := rand.NormFloat64() / 5
+	if p <= 0.5 {
+		for i := 0; i < dim; i++ {
+			x[i] += alpha * (1 - float64(it)/float64(maxIt)) * (x[i] - popMean[i])
+		}
+	} else {
+		for i := 0; i < dim; i++ {
+			x[i] += alpha * math.Exp(float64(-it)/(rand.Float64()*float64(maxIt)))
+		}
+	}
+}
+
+func st2(x, popMean []float64, dim, it, maxIt int) {
+	p := rand.Float64()
+	alpha := rand.NormFloat64() / 2
+	if p <= 0.5 {
+		for i := 0; i < dim; i++ {
+			x[i] += alpha * (1 - float64(it)/float64(maxIt)) * (x[i] - popMean[i])
+		}
+	} else {
+		for i := 0; i < dim; i++ {
+			x[i] += alpha * math.Exp(float64(-it)/(rand.Float64()*float64(maxIt))) * (x[i] - popMean[i])
+		}
+	}
 }
