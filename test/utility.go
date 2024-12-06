@@ -17,6 +17,7 @@ type PO struct {
 }
 
 func (po *PO) Initialize(pop *DNAType.DNAPopulation, inds ...*DNAType.DNAAgent) {
+	rand.Seed(114514)
 	pop.Init()
 	if len(inds) > 0 {
 		pop.Append(inds)
@@ -196,6 +197,7 @@ func st0(x, gbest, popMean []float64, dim, it, maxIt int) {
 }
 
 func ost2(x, popMean []float64, dim, it, maxIt int) {
+	rand.Seed(114514)
 	p := rand.Float64()
 	alpha := rand.NormFloat64() / 5
 	if p <= 0.5 {
@@ -210,6 +212,7 @@ func ost2(x, popMean []float64, dim, it, maxIt int) {
 }
 
 func st2(x, popMean []float64, dim, it, maxIt int) {
+	rand.Seed(114514)
 	p := rand.Float64()
 	alpha := rand.NormFloat64() / 2
 	if p <= 0.5 {
