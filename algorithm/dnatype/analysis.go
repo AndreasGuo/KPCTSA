@@ -307,12 +307,6 @@ func calcTm(sequence string, naConcentration, primerConcentration float64) float
 	}
 	tm := deltaH * 1000 / (deltaS + R*math.Log(primerConcentration/b))
 	tm += 16.0 * math.Log10(naConcentration)
-	// 调整熔解温度，考虑引物浓度
-	// 引物浓度对熔解温度的影响较小，只有当浓度低时才会有较大影响
-	// 对引物浓度的修正相对较小
-	if primerConcentration > 0.00001 { // 1 µM 作为一个简单的阈值
-		tm += 0.0 * math.Log10(primerConcentration/0.000001) // 调整修正因子
-	}
 
 	tm -= 273.15 // K to C
 	return tm
