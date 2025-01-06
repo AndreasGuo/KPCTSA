@@ -1,10 +1,10 @@
 package DNAType
 
 import (
+	"fmt"
 	"math"
 	"slices"
-
-	"github.com/mimikwang/gomelt"
+	"strings"
 )
 
 func Continuity(seq Seq, t int) int {
@@ -231,14 +231,108 @@ func Similarity(lSeq, rSeq Seq) int {
 // (SantaLucia (1998), Proc Natl Acad Sci USA 95: 1460-1465)
 // 问题不大，可以用，如果需要准确数值就再去matlab跑一下就好了
 func MeltingTemperature(seq Seq) float64 {
-	parameters := gomelt.Params{
-		Monovalent: 1000, //50.0,
-		Divalent:   0,    //1.5,
-		Dntp:       0,    //0.2,
-		Dna:        10,   //200.0,
-		T:          37.0,
-	}
 	DNACode, _ := seq.ToStr()
-	result, _ := gomelt.MeltingTemp(DNACode, parameters)
-	return result.Tm
+	salt := 1.0
+	primerConc := 1e-8
+	return calcTm(DNACode, salt, primerConc)
+}
+
+var nearestNeighborParams = map[string]struct {
+	deltaH float64 // 焓变（kcal/mol）
+	deltaS float64 // 熵变（cal/mol/K）
+}{
+	"AA": {-7.9, -22.2},
+	"AC": {-8.4, -22.4},
+	"AG": {-7.8, -21},
+	"AT": {-7.2, -20.4},
+	"CA": {-8.5, -22.7},
+	"CC": {-8.0, -19.9},
+	"CG": {-10.6, -27.2},
+	"CT": {-7.8, -21},
+	"GA": {-8.2, -22.2},
+	"GC": {-9.8, -24.4},
+	"GG": {-8.0, -19.9},
+	"GT": {-8.4, -22.4},
+	"TA": {-7.2, -21.3},
+	"TC": {-8.2, -22.2},
+	"TG": {-8.5, -22.7},
+	"TT": {-7.9, -22.2},
+}
+
+// 计算邻近配对法的熔解温度（Tm），并考虑引物浓度
+// 此算法并不考虑自己与自己全折叠的情况，可能以后会加
+func calcTm(sequence string, naConcentration, primerConcentration float64) float64 {
+	var deltaH, deltaS float64
+	seqLen := len(sequence)
+	allSelfCompFlag := selfComp(sequence)
+	// 处理每一对碱基
+	for i := 0; i < seqLen-1; i++ {
+		pair := strings.ToUpper(sequence[i : i+2]) // 取相邻的两个碱基对
+		if params, exists := nearestNeighborParams[pair]; exists {
+			deltaH += params.deltaH
+			deltaS += params.deltaS
+		} else {
+			// 如果遇到不在参数表中的碱基对，跳过
+			fmt.Printf("Warning: Invalid base pair %s\n", pair)
+		}
+	}
+
+	if allSelfCompFlag {
+		deltaS += -1.4
+	}
+
+	if sequence[0] == 'C' || sequence[0] == 'G' {
+		deltaH += 0.1
+		deltaS += -2.8
+	} else if sequence[0] == 'A' || sequence[0] == 'T' {
+		deltaH += 2.3
+		deltaS += 4.1
+	}
+
+	if sequence[seqLen-1] == 'C' || sequence[seqLen-1] == 'G' {
+		deltaH += 0.1
+		deltaS += -2.8
+	} else if sequence[seqLen-1] == 'A' || sequence[seqLen-1] == 'T' {
+		deltaH += 2.3
+		deltaS += 4.1
+	}
+
+	// 计算熔解温度 Tm
+	// Tm = ΔH / (ΔS + R * ln[Na+])
+	// R = 1.987 cal/mol/K
+	R := 1.9872
+	b := 4.0
+	if allSelfCompFlag {
+		b = 1.0
+	}
+	tm := deltaH * 1000 / (deltaS + R*math.Log(primerConcentration/b))
+	tm += 16.0 * math.Log10(naConcentration)
+	// 调整熔解温度，考虑引物浓度
+	// 引物浓度对熔解温度的影响较小，只有当浓度低时才会有较大影响
+	// 对引物浓度的修正相对较小
+	if primerConcentration > 0.00001 { // 1 µM 作为一个简单的阈值
+		tm += 0.0 * math.Log10(primerConcentration/0.000001) // 调整修正因子
+	}
+
+	tm -= 273.15 // K to C
+	return tm
+}
+
+func selfComp(sequence string) bool {
+	seqLen := len(sequence)
+	for i := range int(seqLen / 2) {
+		if sequence[i] == 'A' && sequence[seqLen-1-i] != 'T' {
+			return false
+		}
+		if sequence[i] == 'C' && sequence[seqLen-1-i] != 'G' {
+			return false
+		}
+		if sequence[i] == 'G' && sequence[seqLen-1-i] != 'C' {
+			return false
+		}
+		if sequence[i] == 'T' && sequence[seqLen-1-i] != 'A' {
+			return false
+		}
+	}
+	return true
 }
