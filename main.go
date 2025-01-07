@@ -8,7 +8,7 @@ func main() {
 	// flags
 	var dnaLength = flag.Int("vdim", 20, "length of sigle DNA sequence")
 	var dnaSetSize = flag.Int("setsize", 7, "size of DNA set")
-	var popSize = flag.Int("popsize", 50, "size of population")
+	var popSize = flag.Int("popsize", 49, "size of population")
 	var maxIt = flag.Int("maxit", 200, "max iteration each algorithm run")
 	var dnaSetIteration = flag.Int("optit", 200, "number of optimize iterations")
 	var minVal = flag.Float64("minval", 2e-2, "min value when calculate product items which need avoid zero")

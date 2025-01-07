@@ -48,7 +48,8 @@ func App(config Config) {
 		fmt.Println("To Optimize: ", index)
 
 		fitFunc := DNAType.FitnessCall(dnaSet, index, fitChan, config.MINVALUE, config.FITREVERSE)
-		alg := algorithm.PO{Pop: nil, MaxIteration: config.MAXIT}
+		//alg := algorithm.PO{Pop: nil, MaxIteration: config.MAXIT}
+		alg := algorithm.XBOA{Pop: nil, MaxIteration: config.MAXIT}
 		pop := new(DNAType.DNAPopulation)
 		pop.SetConfig(config.POPSIZE, config.DIM, 5, float64(config.LB), float64(config.UB))
 		pop.SetFitFunc(fitFunc)
@@ -75,7 +76,7 @@ func App(config Config) {
 
 func saveResult(result string) {
 	now := time.Now()
-	str := now.Format("2006-01-02=15=04")
+	str := now.Format("2006-01-02=15=04") + "XBOA"
 	resultsDir := "results"
 	if _, ok := os.Stat(resultsDir); os.IsNotExist(ok) {
 		err := os.Mkdir(resultsDir, os.ModePerm)
@@ -181,7 +182,7 @@ func chooseInvToOpt(dnaSet []*DNAType.DNAAgent, minVal float64) (idx int) {
 			// if zmax[j] == zmin[j] {
 			// 	continue
 			// }
-			distance[i] *= max(1, (objs[j] - zmin[j]))
+			distance[i] *= max(0.5, (objs[j] - zmin[j]))
 		}
 	}
 	fmt.Println("distance: ", distance)

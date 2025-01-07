@@ -260,7 +260,6 @@ var nearestNeighborParams = map[string]struct {
 }
 
 // 计算邻近配对法的熔解温度（Tm），并考虑引物浓度
-// 此算法并不考虑自己与自己全折叠的情况，可能以后会加
 func calcTm(sequence string, naConcentration, primerConcentration float64) float64 {
 	var deltaH, deltaS float64
 	seqLen := len(sequence)
