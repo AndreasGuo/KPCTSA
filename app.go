@@ -95,6 +95,7 @@ func saveResult(result string) {
 
 func printDNASet(dnaSet []*DNAType.DNAAgent, fitChan *DNAType.FitChan) string {
 	var result = ""
+	var setCt, setHp, setHm, setSm float64 = 0, 0, 0, 0
 	for ind, inv := range dnaSet {
 		DNAString, err := inv.String()
 		if err != nil {
@@ -106,11 +107,13 @@ func printDNASet(dnaSet []*DNAType.DNAAgent, fitChan *DNAType.FitChan) string {
 		fitChan.CtIn <- DNAType.SeqMapSingle{Index: ind, Seq: inv.Represent()}
 		ct := (<-fitChan.CtRe).Value
 		result += " " + strconv.FormatFloat(ct, 'f', 4, 64)
+		setCt += ct
 
 		// hairpin
 		fitChan.HpIn <- DNAType.SeqMapSingle{Index: ind, Seq: inv.Represent()}
 		hp := (<-fitChan.HpRe).Value
 		result += " " + strconv.FormatFloat(hp, 'f', 4, 64)
+		setHp += hp
 
 		// hm
 		hmList := make([]float64, len(dnaSet))
@@ -120,6 +123,7 @@ func printDNASet(dnaSet []*DNAType.DNAAgent, fitChan *DNAType.FitChan) string {
 		}
 		hm := sum(hmList)
 		result += " " + strconv.FormatFloat(hm, 'f', 4, 64)
+		setHm += hm
 
 		// sm
 		smList := make([]float64, len(dnaSet))
@@ -131,12 +135,22 @@ func printDNASet(dnaSet []*DNAType.DNAAgent, fitChan *DNAType.FitChan) string {
 		}
 		sm := sum(smList)
 		result += " " + strconv.FormatFloat(sm, 'f', 4, 64)
+		setSm += sm
 
 		//mt
 		fitChan.MtIn <- DNAType.SeqMapSingle{Index: ind, Seq: inv.Represent()}
 		mt := (<-fitChan.MtRe).Value
 		result += " " + strconv.FormatFloat(mt, 'f', 4, 64) + "\n"
 	}
+
+	for range 2 + len((*dnaSet[0]).Seq) {
+		result += " "
+	}
+	result += " " + strconv.FormatFloat(setCt/7.0, 'f', 4, 64)
+	result += " " + strconv.FormatFloat(setHp/7.0, 'f', 4, 64)
+	result += " " + strconv.FormatFloat(setHm/7.0, 'f', 4, 64)
+	result += " " + strconv.FormatFloat(setSm/7.0, 'f', 4, 64)
+
 	fmt.Println(result)
 	return result
 }
@@ -182,7 +196,7 @@ func chooseInvToOpt(dnaSet []*DNAType.DNAAgent, minVal float64) (idx int) {
 			// if zmax[j] == zmin[j] {
 			// 	continue
 			// }
-			distance[i] *= max(0.5, (objs[j] - zmin[j]))
+			distance[i] *= max(1, (objs[j] - zmin[j]))
 		}
 	}
 	fmt.Println("distance: ", distance)
