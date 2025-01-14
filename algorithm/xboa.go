@@ -21,7 +21,7 @@ func (xboa *XBOA) Initialize(pop *DNAType.DNAPopulation, inds ...*DNAType.DNAAge
 	}
 	xboa.Pop = pop
 	xboa.c = 0.01
-	xboa.a = 0.1
+	xboa.a = 0.2
 	xboa.p = 0.8
 }
 
