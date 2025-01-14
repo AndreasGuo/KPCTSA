@@ -20,9 +20,9 @@ func (xboa *XBOA) Initialize(pop *DNAType.DNAPopulation, inds ...*DNAType.DNAAge
 		pop.Append(inds)
 	}
 	xboa.Pop = pop
-	xboa.c = 0.2
-	xboa.a = 0.5
-	xboa.p = 0.5
+	xboa.c = 0.01
+	xboa.a = 0.1
+	xboa.p = 0.8
 }
 
 func (xboa *XBOA) Iteration(hyperPlaneNorm bool, origin bool, cd bool) *DNAType.DNAAgent {
