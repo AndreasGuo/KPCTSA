@@ -91,6 +91,7 @@ func (xboa *XBOA) Iteration(hyperPlaneNorm bool, origin bool, cd bool) *DNAType.
 				xboa.Pop.UpdatePosition(i, x)
 			}
 		}
+		xboa.c += 0.025 / (xboa.c + float64(xboa.MaxIteration))
 		xboa.Pop.PostWork()
 		xboa.Pop.Join(oldPop)
 
