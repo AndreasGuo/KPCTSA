@@ -81,8 +81,13 @@ func (xboa *XBOA) Iteration(hyperPlaneNorm bool, origin bool, cd bool) *DNAType.
 				r2 := rand.Float64()
 				j := rand.Intn(oldPop.Size())
 				k := rand.Intn(oldPop.Size())
+				gamma := 0.5 - 0.4*(1-(float64(it)/float64(xboa.MaxIteration)))
 				for d := range len(x) {
-					x[d] += f * (r1*r2*oldPop.At(j).Variance()[d] - oldPop.At(k).Variance()[d])
+					if rand.Float64() < 0.5 {
+						x[d] += f * (r1*r2*oldPop.At(j).Variance()[d] - oldPop.At(k).Variance()[d])
+					} else {
+						x[d] += oldPop.At(j).Variance()[d] + C0(gamma)
+					}
 				}
 				for j := 0; j < xboa.Pop.VarianceDim(); j++ {
 					x[j] = max(x[j], xboa.Pop.LB())
