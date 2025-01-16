@@ -84,7 +84,7 @@ func (xboa *XBOA) Iteration(hyperPlaneNorm bool, origin bool, cd bool) *DNAType.
 				gamma := 0.5 - 0.4*(1-(float64(it)/float64(xboa.MaxIteration)))
 				for d := range len(x) {
 					x[d] += f * (r1*r2*oldPop.At(j).Variance()[d] - oldPop.At(k).Variance()[d])
-					if rand.Float64() < 0.2 {
+					if rand.Float64() < 0.1 {
 						x[d] += C0(gamma)
 					}
 				}
