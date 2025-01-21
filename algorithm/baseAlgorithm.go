@@ -4,7 +4,7 @@ import DNAType "GoDNA/algorithm/dnatype"
 
 type anyFuncType func(...interface{}) any
 
-type Algorithm[T int | float64] interface {
+type Algorithm interface {
 	// Initialize a population, with fitness calculated
 	// The fitness function, it takes all individual as input and calculate fitness parallel
 	// and returns the size*objs matrix of fitness values.
