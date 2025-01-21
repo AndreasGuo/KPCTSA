@@ -9,7 +9,7 @@ type Algorithm[T int | float64] interface {
 	// The fitness function, it takes all individual as input and calculate fitness parallel
 	// and returns the size*objs matrix of fitness values.
 	Initialize(pop *DNAType.DNAPopulation, inds ...*DNAType.DNAAgent)
-	Iteration() *DNAType.DNAAgent
+	Iteration(hyperPlaneNorm bool, origin bool, cd bool) *DNAType.DNAAgent
 }
 
 //type Population[T int | float64] struct {
