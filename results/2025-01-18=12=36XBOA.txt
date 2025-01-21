@@ -7,7 +7,7 @@
 6 CCACCATTGAATCTGACTCC 0.0000 0.0000 55.0000 51.0000 62.6232
                        0.0000 0.0000 55.7143 47.7143fit_reversed=true
 planenorm=false
-DNA_set_iteration=200
+DNA_set_iteration=300
 pop_iteration=200
 pop_size=49
 crowding_dis=false

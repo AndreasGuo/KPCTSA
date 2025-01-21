@@ -63,7 +63,7 @@ func App(config Config) {
 			runningDuration := endTime.Sub(startTime).Seconds()
 			result += "fit_reversed=" + strconv.FormatBool(config.FITREVERSE) + "\n"
 			result += "planenorm=" + strconv.FormatBool(config.PLANENORM) + "\n"
-			result += "DNA_set_iteration=" + strconv.Itoa(config.MAXIT) + "\n"
+			result += "DNA_set_iteration=" + strconv.Itoa(config.DNASETITERATION) + "\n"
 			result += "pop_iteration=" + strconv.Itoa(config.MAXIT) + "\n"
 			result += "pop_size=" + strconv.Itoa(config.POPSIZE) + "\n"
 			result += "crowding_dis=" + strconv.FormatBool(config.CD) + "\n"
