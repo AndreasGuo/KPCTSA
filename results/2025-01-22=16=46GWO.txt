@@ -5,11 +5,12 @@
 4 TCCTTCTTATCTCCTCCTCC 0.0000 0.0000 44.0000 49.0000 61.7216
 5 TCTCTATCCTCCAACACTCC 0.0000 0.0000 49.0000 56.0000 62.3015
 6 CATCCACACAGACCAACCAA 0.0000 0.0000 54.0000 48.0000 64.9139
-                       0.0000 0.0000 55.4286 47.7143fit_reversed=true
+                       0.0000 0.0000 55.4286 47.7143
+fit_reversed=true
 planenorm=false
 DNA_set_iteration=300
 pop_iteration=200
 pop_size=49
 crowding_dis=false
 original PO =false
-running time (s)=3462.3923
+running time (s)=3462.3923 # this exp run in debug mod

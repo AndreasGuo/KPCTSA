@@ -71,14 +71,14 @@ func App(config Config) {
 			result += "crowding_dis=" + strconv.FormatBool(config.CD) + "\n"
 			result += "original PO =" + strconv.FormatBool(config.ORIGINPO) + "\n"
 			result += "running time (s)=" + strconv.FormatFloat(runningDuration, 'f', 4, 64)
-			saveResult(result)
+			saveResult(result, alg.GetName())
 		}
 	}
 }
 
-func saveResult(result string) {
+func saveResult(result string, alg string) {
 	now := time.Now()
-	str := now.Format("2006-01-02=15=04") + "XBOA"
+	str := now.Format("2006-01-02=15=04") + alg
 	resultsDir := "results"
 	if _, ok := os.Stat(resultsDir); os.IsNotExist(ok) {
 		err := os.Mkdir(resultsDir, os.ModePerm)
@@ -152,7 +152,7 @@ func printDNASet(dnaSet []*DNAType.DNAAgent, fitChan *DNAType.FitChan) string {
 	result += " " + strconv.FormatFloat(setHp/7.0, 'f', 4, 64)
 	result += " " + strconv.FormatFloat(setHm/7.0, 'f', 4, 64)
 	result += " " + strconv.FormatFloat(setSm/7.0, 'f', 4, 64)
-
+	result += "\n"
 	fmt.Println(result)
 	return result
 }
