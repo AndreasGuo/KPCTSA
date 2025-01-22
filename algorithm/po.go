@@ -12,6 +12,10 @@ type PO struct {
 	MaxIteration int
 }
 
+func (po *PO) GetName() string {
+	return "PO"
+}
+
 func (po *PO) Initialize(pop *DNAType.DNAPopulation, inds ...*DNAType.DNAAgent) {
 	pop.Init()
 	if len(inds) > 0 {

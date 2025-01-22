@@ -49,7 +49,9 @@ func App(config Config) {
 
 		fitFunc := DNAType.FitnessCall(dnaSet, index, fitChan, config.MINVALUE, config.FITREVERSE)
 		//alg := algorithm.PO{Pop: nil, MaxIteration: config.MAXIT}
-		var alg algorithm.Algorithm = &algorithm.XBOA{Pop: nil, MaxIteration: config.MAXIT}
+		//var alg algorithm.Algorithm = &algorithm.XBOA{Pop: nil, MaxIteration: config.MAXIT}
+		var alg = algorithm.NewGWO(config.MAXIT)
+		//var alg = algorithm.NewGWO(0)
 		pop := new(DNAType.DNAPopulation)
 		pop.SetConfig(config.POPSIZE, config.DIM, 5, float64(config.LB), float64(config.UB))
 		pop.SetFitFunc(fitFunc)

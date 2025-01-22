@@ -14,6 +14,10 @@ type XBOA struct {
 	p            float64
 }
 
+func (xboa *XBOA) GetName() string {
+	return "XBOA"
+}
+
 func (xboa *XBOA) Initialize(pop *DNAType.DNAPopulation, inds ...*DNAType.DNAAgent) {
 	pop.Init()
 	if len(inds) > 0 {

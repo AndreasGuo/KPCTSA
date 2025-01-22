@@ -10,6 +10,7 @@ type Algorithm interface {
 	// and returns the size*objs matrix of fitness values.
 	Initialize(pop *DNAType.DNAPopulation, inds ...*DNAType.DNAAgent)
 	Iteration(hyperPlaneNorm bool, origin bool, cd bool) *DNAType.DNAAgent
+	GetName() string
 }
 
 //type Population[T int | float64] struct {
