@@ -6,6 +6,7 @@
 5 CTCCTCCTCTTCACTCTATC 0.0000 0.0000 45.0000 57.0000 60.2125
 6 CTTCCATTACCTCTCCTTCC 0.0000 0.0000 42.0000 55.0000 61.3958
                        0.0000 0.0000 53.1429 51.4286
+probility of C: 0.1
 fit_reversed=true
 planenorm=false
 DNA_set_iteration=300

@@ -47,9 +47,9 @@ func (g *GWO) Iteration(hyperPlaneNorm bool, origin bool, cd bool) *DNAType.DNAA
 		gamma := 0.5 - 0.4*(1-(float64(it)/float64(g.MaxIteration)))
 		//extraIndex := oldPop.Size()
 		for i := range oldPop.Size() {
-			if i == bestIndex {
-				continue
-			}
+			// if i == bestIndex {
+			// 	continue
+			// }
 			x := oldPop.At(i).Variance()
 			for j := range g.Pop.VarianceDim() {
 				r1 := rand.Float64()
@@ -73,7 +73,7 @@ func (g *GWO) Iteration(hyperPlaneNorm bool, origin bool, cd bool) *DNAType.DNAA
 				DDelta := math.Abs(C3*float64(delta.Seq[j]) - x[j])
 				X3 := float64(beta.Seq[j]) - A3*DDelta
 
-				if rand.Float64() < 0.1 {
+				if rand.Float64() < 0.05 {
 					x[j] = (X1 + X2 + X3 + x[j] + C0(gamma)) / 4
 				} else {
 					x[j] = (X1 + X2 + X3) / 3

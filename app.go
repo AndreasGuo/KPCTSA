@@ -53,7 +53,7 @@ func App(config Config) {
 		var alg = algorithm.NewGWO(config.MAXIT)
 		//var alg = algorithm.NewGWO(0)
 		pop := new(DNAType.DNAPopulation)
-		pop.SetConfig(config.POPSIZE, config.DIM, 5, float64(config.LB), float64(config.UB))
+		pop.SetConfig(config.POPSIZE-1, config.DIM, 5, float64(config.LB), float64(config.UB))
 		pop.SetFitFunc(fitFunc)
 		alg.Initialize(pop, dnaSet[index])
 		inv := alg.Iteration(config.PLANENORM, config.ORIGINPO, config.CD)
