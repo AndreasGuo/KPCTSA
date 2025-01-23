@@ -73,7 +73,7 @@ func (g *GWO) Iteration(hyperPlaneNorm bool, origin bool, cd bool) *DNAType.DNAA
 				DDelta := math.Abs(C3*float64(delta.Seq[j]) - x[j])
 				X3 := float64(beta.Seq[j]) - A3*DDelta
 
-				if rand.Float64() < 0.05 {
+				if rand.Float64() < 0.1 {
 					x[j] = (X1 + X2 + X3 + x[j] + C0(gamma)) / 4
 				} else {
 					x[j] = (X1 + X2 + X3) / 3

@@ -6,6 +6,7 @@
 5 CAATTCTCCATTCCACCTCC 0.0000 0.0000 41.0000 61.0000 62.6393
 6 GAGGCGATTGCTAAGAAGAG 0.0000 0.0000 67.0000 40.0000 62.7171
                        0.0000 0.0000 46.5714 58.0000
+probility=0.05
 fit_reversed=true
 planenorm=false
 DNA_set_iteration=300
