@@ -94,6 +94,9 @@ func (g *GWO) Iteration(hyperPlaneNorm bool, origin bool, cd bool) *DNAType.DNAA
 		ZMin = g.Pop.ZMin()
 		bestIndex, selectedIndex := NDKPSort(fits, ZMin, oldPop.Size(), hyperPlaneNorm, cd)
 		bestIndividual = g.Pop.At(bestIndex)
+		alpha = bestIndividual
+		beta = g.Pop.At(argSorted[1])
+		delta = g.Pop.At(argSorted[2])
 		g.Pop.Select(selectedIndex)
 	}
 	return bestIndividual
