@@ -12,6 +12,11 @@ type PO struct {
 	MaxIteration int
 }
 
+func NewPO(maxIteration int) Algorithm {
+	po := &PO{Pop: nil, MaxIteration: maxIteration}
+	return po
+}
+
 func (po *PO) GetName() string {
 	return "PO"
 }
@@ -30,9 +35,10 @@ func (po *PO) Iteration(hyperPlaneNorm bool, origin bool, cd bool) *DNAType.DNAA
 	islog := false
 	fits := po.Pop.Fit()
 	ZMin := po.Pop.ZMin()
-	selectedIndex, _ := NDKPSort(fits, ZMin, po.Pop.Size(), hyperPlaneNorm, cd)
+	bestIndex, _ := NDKPSort(fits, ZMin, po.Pop.Size(), hyperPlaneNorm, cd)
 
-	gbest := po.Pop.At(selectedIndex).Variance()
+	bestIndividual := po.Pop.At(bestIndex).Clone()
+	gbest := po.Pop.At(bestIndex).Variance()
 	sita := rand.Float64() * math.Pi
 
 	for it := 0; it < int(po.MaxIteration); it++ {
@@ -40,9 +46,9 @@ func (po *PO) Iteration(hyperPlaneNorm bool, origin bool, cd bool) *DNAType.DNAA
 		oldPop := po.Pop.Clone()
 		popMean := mean(po.Pop)
 		for i := 0; i < int(po.Pop.Size()); i++ {
-			if i == selectedIndex {
-				continue
-			}
+			// if i == selectedIndex {
+			// 	continue
+			// }
 			st := rand.Intn(4)
 			x := po.Pop.At(i).Variance()
 			if islog {
@@ -103,14 +109,16 @@ func (po *PO) Iteration(hyperPlaneNorm bool, origin bool, cd bool) *DNAType.DNAA
 
 		fits = po.Pop.Fit()
 		ZMin = po.Pop.ZMin()
-		bestIdx, selectedIndex := NDKPSort(fits, ZMin, po.Pop.Size()/2, hyperPlaneNorm, cd)
-		gbest = po.Pop.At(bestIdx).Variance()
+		var selectedIndex []int
+		bestIndex, selectedIndex = NDKPSort(fits, ZMin, po.Pop.Size()/2, hyperPlaneNorm, cd)
+		bestIndividual = po.Pop.At(bestIndex).Clone()
+		gbest = po.Pop.At(bestIndex).Variance()
 		po.Pop.Select(selectedIndex)
 
 		sita = rand.Float64() * math.Pi
 	}
 
-	return po.Pop.At(selectedIndex)
+	return bestIndividual //po.Pop.At(selectedIndex)
 }
 
 func levy(lh int) []float64 {

@@ -176,7 +176,7 @@ func mtDiviant(values, compared []float64, minVal float64) {
 		//}
 		//div += math.Pow((value-avg)/(maxVal-minVal), 2)
 		//div /= float64(config.DNASIZE)
-		values[i] = max(value-avg, minVal)
+		values[i] = max(value-avg, 1.0) // minVal)
 	}
 }
 

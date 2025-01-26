@@ -12,8 +12,19 @@ import (
 
 var zmin []float64
 
+var startTime time.Time
+var logFileName string
+
 func App(config Config) {
-	startTime := time.Now()
+	startTime = time.Now()
+	var alg = algorithm.NewTSA(config.MAXIT)
+	logFileName = startTime.Format("2006-01-02=15=04") + alg.GetName() + ".txt"
+	file, err := createFile(logFileName)
+	if err != nil {
+		fmt.Println("error on creating file: " + err.Error())
+		return
+	}
+	defer file.Close()
 
 	// create working pool
 	fitChan := DNAType.CreateWorker(100, 100, 10)
@@ -28,11 +39,12 @@ func App(config Config) {
 		zmin[j] = 400
 	}
 
-	printDNASet(dnaSet, fitChan)
+	result := printDNASet(dnaSet, fitChan)
+	file.Write([]byte(result))
 
 	for it := 0; it < config.DNASETITERATION; it++ {
 		fmt.Println("DNASet iteration ", it+1, "/", config.DNASETITERATION)
-
+		file.Write([]byte("DNASet iteration " + strconv.Itoa(it+1) + "/" + strconv.Itoa(config.DNASETITERATION) + ", "))
 		// init objs
 		// cause one sequence is changed
 		// the others must be recauculated
@@ -46,12 +58,12 @@ func App(config Config) {
 		// choose a sequence in DNA set to optimize
 		index := chooseInvToOpt(dnaSet, config.MINVALUE)
 		fmt.Println("To Optimize: ", index)
+		file.Write([]byte("To Optimize: " + strconv.Itoa(index) + "\n\n"))
 
 		fitFunc := DNAType.FitnessCall(dnaSet, index, fitChan, config.MINVALUE, config.FITREVERSE)
-		//alg := algorithm.PO{Pop: nil, MaxIteration: config.MAXIT}
+		// alg := algorithm.NewPO(config.MAXIT)
 		//var alg algorithm.Algorithm = &algorithm.XBOA{Pop: nil, MaxIteration: config.MAXIT}
-		var alg = algorithm.NewGWO(config.MAXIT)
-		//var alg = algorithm.NewGWO(0)
+		//var alg = algorithm.NewGWO(config.MAXIT)
 		pop := new(DNAType.DNAPopulation)
 		pop.SetConfig(config.POPSIZE-1, config.DIM, 5, float64(config.LB), float64(config.UB))
 		pop.SetFitFunc(fitFunc)
@@ -59,11 +71,13 @@ func App(config Config) {
 		inv := alg.Iteration(config.PLANENORM, config.ORIGINPO, config.CD)
 		dnaSet[index] = inv
 
+		// generation log
 		result := printDNASet(dnaSet, fitChan)
+		file.Write([]byte(result))
 		if it == config.DNASETITERATION-1 {
 			endTime := time.Now()
 			runningDuration := endTime.Sub(startTime).Seconds()
-			result += "fit_reversed=" + strconv.FormatBool(config.FITREVERSE) + "\n"
+			result := "fit_reversed=" + strconv.FormatBool(config.FITREVERSE) + "\n"
 			result += "planenorm=" + strconv.FormatBool(config.PLANENORM) + "\n"
 			result += "DNA_set_iteration=" + strconv.Itoa(config.DNASETITERATION) + "\n"
 			result += "pop_iteration=" + strconv.Itoa(config.MAXIT) + "\n"
@@ -71,29 +85,41 @@ func App(config Config) {
 			result += "crowding_dis=" + strconv.FormatBool(config.CD) + "\n"
 			result += "original PO =" + strconv.FormatBool(config.ORIGINPO) + "\n"
 			result += "running time (s)=" + strconv.FormatFloat(runningDuration, 'f', 4, 64)
-			saveResult(result, alg.GetName())
+			file.Write([]byte(result))
+			//saveResult(result, alg.GetName())
 		}
 	}
 }
 
-func saveResult(result string, alg string) {
-	now := time.Now()
-	str := now.Format("2006-01-02=15=04") + alg
+func createFile(filename string) (*os.File, error) {
 	resultsDir := "results"
 	if _, ok := os.Stat(resultsDir); os.IsNotExist(ok) {
 		err := os.Mkdir(resultsDir, os.ModePerm)
 		if err != nil {
 			fmt.Println("error on creating resutls dir: ", err)
-			return
+			return nil, err
 		}
 	}
-	fileName := filepath.Join(resultsDir, str+".txt")
-	err := os.WriteFile(fileName, []byte(result), 0644)
-	if err != nil {
-		fmt.Println("error on writing result: ", err)
-		fmt.Println("result is:", result)
-	}
+	return os.Create(filepath.Join(resultsDir, filename))
 }
+
+// func saveResult(result string, alg string) {
+// 	//now := time.Now()
+// 	resultsDir := "results"
+// 	if _, ok := os.Stat(resultsDir); os.IsNotExist(ok) {
+// 		err := os.Mkdir(resultsDir, os.ModePerm)
+// 		if err != nil {
+// 			fmt.Println("error on creating resutls dir: ", err)
+// 			return
+// 		}
+// 	}
+// 	fileName := filepath.Join(resultsDir, str+".txt")
+// 	err := os.WriteFile(fileName, []byte(result), 0644)
+// 	if err != nil {
+// 		fmt.Println("error on writing result: ", err)
+// 		fmt.Println("result is:", result)
+// 	}
+// }
 
 func printDNASet(dnaSet []*DNAType.DNAAgent, fitChan *DNAType.FitChan) string {
 	var result = ""
