@@ -38,44 +38,49 @@ func (tsa *TSA) Iteration(hyperPlaneNorm bool, origin bool, cd bool) *DNAType.DN
 	bestIndex, _ := NDKPSort(fits, ZMin, tsa.Pop.Size(), hyperPlaneNorm, cd)
 
 	bestIndividual := tsa.Pop.At(bestIndex).Clone()
+	gbest := bestIndividual.Variance()
 
 	for it := range tsa.MaxIteration {
 		oldPop := tsa.Pop.Clone()
-		xmin := 0.5
-		xmax := 2.0
-		xr := xmin + rand.Float64()*(xmax-xmin)
+		// xmin := 0.1
+		// xmax := 1.5
 		gamma := 0.5 - 0.4*(1-(float64(it)/float64(tsa.MaxIteration)))
+		popMean := mean(tsa.Pop)
 		for i := range oldPop.Size() {
 			x := oldPop.At(i).Clone().Variance()
 			for j := range tsa.Pop.VarianceDim() {
-				A1 := (rand.Float64() + rand.Float64())
-				A1 -= rand.Float64() * rand.Float64()
-				A1 /= xr
-				c2 := rand.Float64()
-				if i == 0 {
+				// A1 := (rand.Float64() + rand.Float64())
+				// A1 -= rand.Float64() * rand.Float64()
+				// xr := xmin + rand.Float64()*(xmax-xmin)
+				// A1 /= xr
+				A1 := C0(gamma)
+				//c2 := rand.Float64()
+				if rand.Float64() < 0.4 {
 					c3 := rand.Float64()
 					if c3 >= 0.5 {
-						d_pos := math.Abs(x[j] - c2*x[j])
+						d_pos := math.Abs(x[j] - popMean[j]) //* c2
 						x[j] = x[j] + A1*d_pos
 					} else {
-						d_pos := math.Abs(x[j] - c2*x[j])
+						d_pos := math.Abs(x[j] - popMean[j]) //* c2
 						x[j] = x[j] - A1*d_pos
 					}
 				} else {
 					c3 := rand.Float64()
+					d_pos := math.Abs(x[j] - gbest[j])
 					if c3 >= 0.5 {
-						d_pos := math.Abs(x[j] - c2*x[j])
+						//d_pos := math.Abs(x[j] - c2*x[j])
+
 						x[j] = x[j] + A1*d_pos
 					} else {
-						d_pos := math.Abs(x[j] - c2*x[j])
+						//d_pos := math.Abs(x[j] - c2*x[j])
 						x[j] = x[j] - A1*d_pos
 					}
-					chosen := rand.Int() % oldPop.Size()
-					x[j] = (x[j] + oldPop.At(chosen).Variance()[j]) / 2
+					// chosen := rand.Int() % oldPop.Size()
+					// x[j] = (x[j] + oldPop.At(chosen).Variance()[j]) / 2
 				}
-				if rand.Float64() < 0.1 {
-					x[j] = x[j] + C0(gamma)
-				}
+				// if rand.Float64() < 0.1 {
+				// 	x[j] = x[j] + C0(gamma)
+				// }
 				x[j] = max(x[j], tsa.Pop.LB())
 				x[j] = min(x[j], tsa.Pop.UB())
 			}
@@ -90,6 +95,7 @@ func (tsa *TSA) Iteration(hyperPlaneNorm bool, origin bool, cd bool) *DNAType.DN
 		var selectedIndex []int
 		bestIndex, selectedIndex = NDKPSort(fits, ZMin, tsa.Pop.Size()/2, hyperPlaneNorm, cd)
 		bestIndividual = tsa.Pop.At(bestIndex).Clone()
+		gbest = bestIndividual.Variance()
 		tsa.Pop.Select(selectedIndex)
 	}
 	return bestIndividual
