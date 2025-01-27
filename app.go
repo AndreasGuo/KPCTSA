@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"strconv"
 	"time"
+
+	"gonum.org/v1/gonum/stat"
 )
 
 var zmin []float64
@@ -124,6 +126,8 @@ func createFile(filename string) (*os.File, error) {
 func printDNASet(dnaSet []*DNAType.DNAAgent, fitChan *DNAType.FitChan) string {
 	var result = ""
 	var setCt, setHp, setHm, setSm float64 = 0, 0, 0, 0
+	var mts = make([]float64, 0, 7)
+	var setMT float64 = 0
 	for ind, inv := range dnaSet {
 		DNAString, err := inv.String()
 		if err != nil {
@@ -168,6 +172,8 @@ func printDNASet(dnaSet []*DNAType.DNAAgent, fitChan *DNAType.FitChan) string {
 		//mt
 		fitChan.MtIn <- DNAType.SeqMapSingle{Index: ind, Seq: inv.Represent()}
 		mt := (<-fitChan.MtRe).Value
+		mts = append(mts, mt)
+		setMT += mt
 		result += " " + strconv.FormatFloat(mt, 'f', 4, 64) + "\n"
 	}
 
@@ -178,6 +184,8 @@ func printDNASet(dnaSet []*DNAType.DNAAgent, fitChan *DNAType.FitChan) string {
 	result += " " + strconv.FormatFloat(setHp/7.0, 'f', 4, 64)
 	result += " " + strconv.FormatFloat(setHm/7.0, 'f', 4, 64)
 	result += " " + strconv.FormatFloat(setSm/7.0, 'f', 4, 64)
+	result += " " + strconv.FormatFloat(setMT/7.0, 'f', 4, 64)
+	result += "(" + strconv.FormatFloat(stat.Variance(mts, nil), 'f', 4, 64) + ")"
 	result += "\n"
 	fmt.Println(result)
 	return result
@@ -238,3 +246,16 @@ func chooseInvToOpt(dnaSet []*DNAType.DNAAgent, minVal float64) (idx int) {
 	}
 	return idx
 }
+
+// func variance(nums []float64) float64 {
+// 	var sum float64 = 0
+// 	for _, n := range nums {
+// 		sum += n
+// 	}
+// 	mean := sum / float64(len(nums))
+// 	var v float64 = 0
+// 	for _, n := range nums {
+// 		v += (n - mean) * (n - mean)
+// 	}
+// 	return v / (float64(len(nums) - 1))
+// }

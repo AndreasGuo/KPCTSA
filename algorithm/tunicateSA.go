@@ -44,7 +44,8 @@ func (tsa *TSA) Iteration(hyperPlaneNorm bool, origin bool, cd bool) *DNAType.DN
 		oldPop := tsa.Pop.Clone()
 		// xmin := 0.1
 		// xmax := 1.5
-		gamma := 0.5 - 0.4*(1-(float64(it)/float64(tsa.MaxIteration)))
+		//gamma := 0.5 - 0.4*(1-(float64(it)/float64(tsa.MaxIteration)))
+		gamma := 0.1 + 0.4*(1-float64(it)/float64(tsa.MaxIteration))
 		popMean := mean(tsa.Pop)
 		for i := range oldPop.Size() {
 			x := oldPop.At(i).Clone().Variance()
@@ -79,7 +80,7 @@ func (tsa *TSA) Iteration(hyperPlaneNorm bool, origin bool, cd bool) *DNAType.DN
 				}
 				// chosen := rand.Int() % oldPop.Size()
 				// x[j] = x[j] + 0.5*(rand.Float64()-0.5)*tsa.Pop.At(chosen).Variance()[j]
-				// x[j] = (x[j] + oldPop.At(chosen).Variance()[j]) / (1 + rand.Float64())
+				// x[j] = (x[j] + oldPop.At(chosen).Variance()[j]) / (1.5 + rand.Float64())
 
 				x[j] = max(x[j], tsa.Pop.LB())
 				x[j] = min(x[j], tsa.Pop.UB())

@@ -197,7 +197,7 @@ func crowdingDistance(normedFits [][]float64) ([]float64, error) {
 		indicies := argsort.SortSlice(obj_m, func(i, j int) bool {
 			return obj_m[i] < obj_m[j]
 		})
-		interval := max(slices.Max(obj_m)-slices.Min(obj_m), 1)
+		interval := max(slices.Max(obj_m)-slices.Min(obj_m), 0.5)
 		for i := range n {
 			if indicies[i] == 0 || indicies[i] == n-1 {
 				cd[i] += inf
