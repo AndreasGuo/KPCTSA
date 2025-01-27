@@ -75,12 +75,12 @@ func (tsa *TSA) Iteration(hyperPlaneNorm bool, origin bool, cd bool) *DNAType.DN
 						//d_pos := math.Abs(x[j] - c2*x[j])
 						x[j] = x[j] - A1*d_pos
 					}
-					// chosen := rand.Int() % oldPop.Size()
-					// x[j] = (x[j] + oldPop.At(chosen).Variance()[j]) / 2
+
 				}
-				// if rand.Float64() < 0.1 {
-				// 	x[j] = x[j] + C0(gamma)
-				// }
+				chosen := rand.Int() % oldPop.Size()
+				x[j] = x[j] + (rand.Float64()-0.5)*tsa.Pop.At(chosen).Variance()[j]
+				//(x[j] + oldPop.At(chosen).Variance()[j]) / (2 + rand.Float64() - 0.5)
+
 				x[j] = max(x[j], tsa.Pop.LB())
 				x[j] = min(x[j], tsa.Pop.UB())
 			}
