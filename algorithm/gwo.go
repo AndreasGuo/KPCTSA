@@ -27,7 +27,7 @@ func (g *GWO) Initialize(pop *DNAType.DNAPopulation, inds ...*DNAType.DNAAgent) 
 	g.Pop = pop
 }
 
-func (g *GWO) Iteration(hyperPlaneNorm bool, origin bool, cd bool) *DNAType.DNAAgent {
+func (g *GWO) Iteration(hyperPlaneNorm bool, cd bool) *DNAType.DNAAgent {
 	// logger := log.Default()
 	// islog := false
 	fits := g.Pop.Fit()

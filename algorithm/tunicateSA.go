@@ -32,7 +32,7 @@ func (tsa *TSA) Initialize(pop *DNAType.DNAPopulation, inds ...*DNAType.DNAAgent
 }
 
 // Iteration implements Algorithm.
-func (tsa *TSA) Iteration(hyperPlaneNorm bool, origin bool, cd bool) *DNAType.DNAAgent {
+func (tsa *TSA) Iteration(hyperPlaneNorm bool, cd bool) *DNAType.DNAAgent {
 	fits := tsa.Pop.Fit()
 	ZMin := tsa.Pop.ZMin()
 	bestIndex, _ := NDKPSort(fits, ZMin, tsa.Pop.Size(), hyperPlaneNorm, cd)

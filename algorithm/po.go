@@ -30,12 +30,13 @@ func (po *PO) Initialize(pop *DNAType.DNAPopulation, inds ...*DNAType.DNAAgent) 
 }
 
 // PO + NDSort + Knee Point
-func (po *PO) Iteration(hyperPlaneNorm bool, origin bool, cd bool) *DNAType.DNAAgent {
+func (po *PO) Iteration(hyperPlaneNorm bool, cd bool) *DNAType.DNAAgent {
 	logger := log.Default()
 	islog := false
 	fits := po.Pop.Fit()
 	ZMin := po.Pop.ZMin()
 	bestIndex, _ := NDKPSort(fits, ZMin, po.Pop.Size(), hyperPlaneNorm, cd)
+	origin := false
 
 	bestIndividual := po.Pop.At(bestIndex).Clone()
 	gbest := po.Pop.At(bestIndex).Variance()

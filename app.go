@@ -70,7 +70,7 @@ func App(config Config) {
 		pop.SetConfig(config.POPSIZE-1, config.DIM, 5, float64(config.LB), float64(config.UB))
 		pop.SetFitFunc(fitFunc)
 		alg.Initialize(pop, dnaSet[index])
-		inv := alg.Iteration(config.PLANENORM, config.ORIGINPO, config.CD)
+		inv := alg.Iteration(config.PLANENORM, config.CD)
 		dnaSet[index] = inv
 
 		// generation log
@@ -85,7 +85,7 @@ func App(config Config) {
 			result += "pop_iteration=" + strconv.Itoa(config.MAXIT) + "\n"
 			result += "pop_size=" + strconv.Itoa(config.POPSIZE) + "\n"
 			result += "crowding_dis=" + strconv.FormatBool(config.CD) + "\n"
-			result += "original PO =" + strconv.FormatBool(config.ORIGINPO) + "\n"
+			// result += "original PO =" + strconv.FormatBool(config.ORIGINPO) + "\n"
 			result += "running time (s)=" + strconv.FormatFloat(runningDuration, 'f', 4, 64)
 			file.Write([]byte(result))
 			//saveResult(result, alg.GetName())
